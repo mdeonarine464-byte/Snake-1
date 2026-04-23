@@ -44,7 +44,6 @@
         [style*="border-left-color: var(--soul)"], [style*="border-left:4px solid var(--soul)"] { box-shadow: 0 0 10px rgba(160, 32, 240, 0.3); }
         [style*="border-left-color: #ff4500"] { box-shadow: 0 0 10px rgba(255, 69, 0, 0.4); }
         #main-shop-panel > .panel > .stat-label,
-        #black-market-panel > .panel > .stat-label,
         #permanent-skills-panel > .stat-label,
         #save-code-panel > .stat-label {
             color: #cfd3d6;
@@ -53,18 +52,7 @@
         }
         #main-shop-panel .classic-btn,
         #main-shop-panel .bank-btn,
-        #black-market-panel .classic-btn,
-        #black-market-panel .bank-btn,
-        #permanent-skills-panel .classic-btn,
-        #soul-altar .classic-btn,
-        #shop-tabs .tab-btn {
-            text-shadow: var(--glow-white);
-        }
-        #soul-altar .accordion.soul-purple-title { text-shadow: var(--glow-soul); }
-        #soul-altar .accordion.soul-gold-title { text-shadow: var(--glow-gold); }
-        #soul-altar .upgrade-desc,
-        #soul-altar .stat-label[id$="-desc"] {
-            color: #ddd;
+        #permanent-skills-panel .classic-btn {
             text-shadow: var(--glow-white);
         }
         body { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; margin: 0; background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; overflow-y: auto; overflow-x: hidden; }
@@ -634,113 +622,6 @@
 
 <div id="game-layout">
     <div class="sidebar">
-        <div id="soul-altar" style="display: none;">
-            <button class="panel accordion stat-val soul-purple-title" style="color:var(--soul); border-left:4px solid var(--soul); border-radius:12px 12px 0 0; margin-bottom:0;">Soul Altar</button>
-            <div class="panel-content" style="display:block; border-left:4px solid var(--soul); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
-            <span class="stat-val"><span id="shard-count" style="color:var(--soul)">0</span> Shards</span>
-            <button class="classic-btn" style="margin-top:10px; border-color:var(--soul);" onclick="prestige()">Rebirth (+10 Lvl) <span class="btn-price" style="color:var(--soul) !important">GO</span></button>
-            <button class="classic-btn" onclick="buySoulUpgrade('noWall')">No Wall Collision <span class="btn-price" style="color:var(--soul) !important">10 SHARDS</span></button>
-            <button class="classic-btn" id="soul-insurance-btn" onclick="buySoulUpgrade('soulInsurance')">Soul Insurance <span class="btn-price" style="color:var(--soul)">2 SHARDS</span></button>
-            <span class="stat-label upgrade-desc" id="soul-insurance-desc">First death per run revives you at half length with a SOUL ANCHOR.</span>
-            <button class="classic-btn" id="quick-turn-btn" onclick="buySoulUpgrade('quickTurn')">Quick Turn <span class="btn-price" style="color:var(--soul)">8 SHARDS</span></button>
-            <span class="stat-label upgrade-desc" id="quick-turn-desc">Double-tap the opposite direction within 200ms to instantly reverse. No self-collision on the turn.</span>
-            <button class="panel accordion stat-val soul-purple-title" style="color:var(--soul); border-left:4px solid var(--soul); border-radius:12px 12px 0 0; margin-bottom:0; margin-top:8px;">Phase Path</button>
-            <div class="panel-content" style="border-left:4px solid var(--soul); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
-                <button class="classic-btn" id="phase-shift-btn" onclick="buySoulUpgrade('phase')">Phase Shift (Space) <span class="btn-price" style="color:var(--soul)">1 SHARD</span></button>
-                <span class="stat-label upgrade-desc">Press Space to phase through yourself for a short duration.</span>
-                <button class="classic-btn" id="dual-phase-btn" onclick="buySoulUpgrade('dualPhase')">Dual Phase <span class="btn-price" style="color:var(--soul)">2 SHARDS</span></button>
-                <span class="stat-label upgrade-desc">Adds a second phase charge each run.</span>
-                <button class="classic-btn" id="phase-greed-btn" onclick="buySoulUpgrade('phaseGreed')">Phase Greed <span class="btn-price" style="color:var(--soul)">3 SHARDS</span></button>
-                <span class="stat-label upgrade-desc">Collect apples while phasing for bonus gold.(CANT BE BOUGHT WITH PHASE EXPERTISE)</span>
-                <button class="classic-btn" id="phase-expertise-btn" onclick="buySoulUpgrade('phaseExpertise')">Phase Expertise <span class="btn-price" style="color:var(--soul)">3 SHARDS</span></button>
-                <span class="stat-label upgrade-desc">Collect apples while phasing for bonus XP.(CANT BE BOUGHT WITH PHASE GREED)</span>
-                <button class="classic-btn" id="phase-premonition-btn" onclick="buySoulUpgrade('phasePremonition')">Phase Premonition <span class="btn-price" style="color:var(--soul)">4 SHARDS</span></button>
-                <span class="stat-label upgrade-desc">Briefly reveals where the next apple will spawn during phase.</span>
-                <button class="classic-btn" id="phase-charge-btn" onclick="buySoulUpgrade('phaseCharge')">Phase Charge <span class="btn-price" style="color:var(--soul)">5 SHARDS</span></button>
-                <span class="stat-label upgrade-desc">Eat apples to shorten phase cooldown after use.</span>
-                <button class="classic-btn" id="temporal-phase-slow-btn" onclick="buySoulUpgrade('temporalPhaseSlow')">Temporal Phase Slow <span class="btn-price" style="color:var(--soul)">6 SHARDS</span></button>
-                <span class="stat-label upgrade-desc">Slows time during phase.</span>
-                <button class="classic-btn" id="immortal-phase-btn" onclick="buySoulUpgrade('immortalPhase')">Immortal Phase <span class="btn-price" style="color:var(--soul)">10 SHARDS</span></button>
-                <span class="stat-label upgrade-desc">Phase imidietly when danger.</span>
-            </div>
-            <button class="panel accordion stat-val soul-gold-title" style="color:var(--gold); border-left:4px solid var(--gold); border-radius:12px 12px 0 0; margin-bottom:0; margin-top:8px;">Apples</button>
-            <div class="panel-content" style="border-left:4px solid var(--gold); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
-                <button class="classic-btn" id="gold-apple-btn" onclick="buyAppleUpgrade()">Gold Apple <span class="btn-price">1 SHARD</span></button>
-                <div class="stat-label" id="gold-apple-desc" style="margin-bottom:8px; color:#ddd; text-transform:none;">Apples give +20% gold (max +100%) and +5% XP (max +20%)</div>
-                <button class="classic-btn" id="dual-apple-btn" onclick="buyDualAppleUpgrade()">Dual Apple <span class="btn-price">2 SHARD</span></button>
-                <div class="stat-label" id="dual-apple-desc" style="margin-bottom:8px; color:#ddd; text-transform:none;">11% chance two apples spawn (max 55%)</div>
-                <button class="classic-btn" id="echo-growth-btn" onclick="buyEchoGrowthUpgrade()">Echo Growth <span class="btn-price">3 SHARD</span></button>
-                <div class="stat-label" id="echo-growth-desc" style="color:#ddd; text-transform:none;">Every 5th apple grants bonus growth.</div>
-            </div>
-            <button class="panel accordion stat-val soul-purple-title" style="color:var(--soul); border-left:4px solid var(--soul); border-radius:12px 12px 0 0; margin-bottom:0; margin-top:8px;">Shedding (Amour)</button>
-            <div class="panel-content" style="border-left:4px solid var(--soul); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
-                <button class="classic-btn" id="shedding-btn" onclick="buySheddingUpgrade()">Shedding <span class="btn-price" style="color:var(--soul)">1 SHARD</span></button>
-                <div class="stat-label" id="shedding-desc" style="color:#ddd; text-transform:none;">Every 15 apples, shed 2 tail segments.</div>
-                <button class="classic-btn" id="cannibalism-btn" onclick="buyCannibalismUpgrade()">Cannibalism <span class="btn-price" style="color:var(--soul)">3 SHARDS</span></button>
-                <div class="stat-label" id="cannibalism-desc" style="color:#ddd; text-transform:none;">After molting, eat shed tail pieces for 2x apple rewards + current boosts.</div>
-                <button class="classic-btn" id="impact-shed-btn" onclick="buyImpactSheddingUpgrade()">Shed on Impact <span class="btn-price" style="color:var(--soul)">5 SHARDS</span></button>
-                <div class="stat-label" id="impact-shed-desc" style="color:#ddd; text-transform:none;">Wall collisions shed tail segments instead of killing you.</div>
-            </div>
-            </div>
-        </div>
-
-        <div class="panel" id="hero-panel">
-            <span class="stat-label">Hero Level</span>
-            <span class="stat-val" id="lvl-text" onclick="revealSoul()">LVL 1</span>
-            <div class="xp-bg"><div id="xp-fill"></div></div>
-            <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:0.7em">
-                <div style="display:flex; align-items:center; gap:6px;">
-  <span id="xp-multi-disp" style="color:var(--xp)">1.0x XP</span>
-
-  <!-- ✅ New small yellow boost display -->
-  <span id="xp-boost-disp"
-        style="color:var(--gold); font-size:0.80em; opacity:0.95;">
-    +0.00 (B:0.00 / A:0.00)
-  </span>
-</div>
-                <span id="sp-disp" style="color:var(--xp)">0 SP</span>
-            </div>
-            <div id="phase-status" style="font-size:0.7em; color:var(--soul); margin-top:5px; display:none;">PHASE: READY</div>
-        </div>
-
-        <div id="permanent-skills-panel">
-            <button class="panel accordion stat-val" style="color:var(--xp); border-left:4px solid var(--xp); border-radius:12px 12px 0 0; margin-bottom:0;">Permanent Skills</button>
-            <div class="panel-content" style="display:block; border-left:4px solid var(--xp); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
-                <button class="classic-btn" onclick="upgrade('speed')">Speed <span class="btn-price" id="cost-speed">1 SP</span></button>
-                <button class="classic-btn" onclick="upgrade('size')">Size <span class="btn-price" id="cost-size">1 SP</span></button>
-                <button class="classic-btn" onclick="upgrade('evo')">Growth <span class="btn-price" id="cost-evo">1 SP</span></button>
-            </div>
-        </div>
-
-        <div id="cheat-area" style="display:none;">
-            <button class="classic-btn" style="background:#4ecca3; color:black; font-weight:bold; justify-content:center;" onclick="godMode()">CHEAT: MAX ALL</button>
-        </div>
-        
-        <button class="danger-btn" onclick="resetGame()">RESET (R)</button>
-        <button class="danger-btn title-return-btn" onclick="returnToTitle()">TITLE SCREEN (T)</button>
-    </div>
-
-    <div id="game-container">
-    <div id="pause-overlay">⏸ PAUSED</div>
-    <div id="soul-anchor-toast" class="soul-anchor-toast">SOUL ANCHOR USED</div>
-    <canvas id="game" width="400" height="400" title="Click to toggle fullscreen" style="cursor:pointer;"></canvas>
-    
-    <!-- New Save Code Section -->
-    <div id="save-code-panel" style="margin-top:15px; background:#151515; padding:10px; border-radius:8px; border:1px solid #333;">
-        <span class="stat-label">Save Code (Export/Import)</span>
-        <textarea id="save-code-box" style="width:100%; background:#000; color:var(--xp); border:1px solid #222; font-family:monospace; font-size:10px; margin-top:5px; resize:none; padding:5px;" rows="3" placeholder="Paste save code here..."></textarea>
-        <div style="display:flex; gap:5px; margin-top:5px;">
-            <button class="classic-btn" style="padding:5px; flex:1; justify-content:center;" onclick="exportSave()">Export Code</button>
-            <button class="classic-btn" style="padding:5px; flex:1; justify-content:center;" onclick="importSave()">Import Code</button>
-        </div>
-    </div>
-</div>
-
-    <div class="sidebar">
-        <div id="shop-tabs" style="display:flex; gap:5px; margin-bottom:8px;">
-            <button class="tab-btn active" onclick="switchShopTab('main')">MAIN SHOP</button>
-            <button class="tab-btn" onclick="switchShopTab('black')">BLACK MARKET</button>
-        </div>
         <div id="main-shop-panel">
         <button class="panel accordion stat-val" style="color:var(--gold); border-left:4px solid var(--gold); border-radius:12px 12px 0 0; margin-bottom:0;">Bank</button>
         <div class="panel-content" style="border-left:4px solid var(--gold); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
@@ -756,15 +637,6 @@
             </div>
         </div>
 
-        <button class="panel accordion stat-val" style="color:#ff9966; border-left:4px solid #ff4500; border-radius:12px 12px 0 0; margin-bottom:0; margin-top:8px;">Buff Shop</button>
-        <div class="panel-content" style="border-left:4px solid #ff4500; border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
-            <span class="stat-label">Buffs (Session Only)</span>
-            <button class="classic-btn" onclick="buyBuff('speed')">Boost Speed <span class="btn-price">500G</span></button>
-            <button class="classic-btn" onclick="buyBuff('size')">Boost Size <span class="btn-price">1000G</span></button>
-            <button class="classic-btn" onclick="buyBuff('evo')">Boost Evo  <span class="btn-price">1500G</span></button>
-            <button class="classic-btn" onclick="buyXPBoost()">5x XP Boost <span class="btn-price">5000G</span></button>
-        </div>
-
         <button class="panel accordion stat-val" style="color:var(--pink); border-left:4px solid var(--pink); border-radius:12px 12px 0 0; margin-bottom:0; margin-top:8px;">Skin Shop</button>
         <div class="panel-content" style="border-left:4px solid var(--pink); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
             <div class="color-grid-scroll">
@@ -776,7 +648,6 @@
                 <div class="color-opt skin-opt" data-hex="#ffffff" data-label="100k" style="background:#ffffff" onclick="buySkin('#ffffff',100000)">100k</div>
                 <div class="color-opt skin-opt" data-hex="#9370db" data-label="150k" style="background:#9370db" onclick="buySkin('#9370db',150000)">150k</div>
                 <div class="color-opt skin-opt" data-hex="#1e90ff" data-label="200k" style="background:#1e90ff" onclick="buySkin('#1e90ff',200000)">200k</div>
-                
                 <div class="color-opt skin-opt" data-hex="#013220" data-label="FREE" data-requires="cheat" style="background:#013220" onclick="buySkin('#013220',0)">FREE</div>
                 <div class="color-opt skin-opt" data-hex="#ff4500" data-label="FREE" data-requires="hellEnding" style="background:#ff4500" onclick="buySkin('#ff4500',0)">FREE</div>
                 <div class="color-opt skin-opt" data-hex="#a020f0" data-label="FREE" data-requires="rebirth" style="background:#a020f0" onclick="buySkin('#a020f0',0)">FREE</div>
@@ -800,58 +671,61 @@
                 <div class="color-opt apple-skin-opt" data-apple-hex="#ffffff" data-apple-label="50k" style="background:#ffffff" onclick="buyAppleSkin('#ffffff',50000)">50k</div>
             </div>
         </div>
-    </div>
-
-<div id="black-market-panel" style="display: none;">
-    <div class="panel" style="border-left-color: #00ffff;">
-        <span class="stat-label">Diamonds (Premium)</span>
-        <span class="stat-val" id="diamond-count">0 D</span>
-        <div class="bank-grid">
-            <button class="bank-btn" onclick="buyDiamondPack(5)">5 D<br><span class="btn-price">$2.99</span></button>
-            <button class="bank-btn" onclick="buyDiamondPack(15)">15 D<br><span class="btn-price">$7.99</span></button>
-            <button class="bank-btn" onclick="buyDiamondPack(35)">35 D<br><span class="btn-price">$19.99</span></button>
-            <button class="bank-btn" onclick="buyDiamondPack(75)">75 D<br><span class="btn-price">$39.99</span></button>
         </div>
     </div>
-<button class="panel accordion stat-val" style="color:var(--soul); border-left:4px solid var(--soul); border-radius:12px 12px 0 0; margin-bottom:0;">Shard Bundles</button>
-  <div class="panel-content" style="border-left:4px solid var(--soul); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
+
+    <div id="game-container">
+    <div id="pause-overlay">⏸ PAUSED</div>
+    <div id="soul-anchor-toast" class="soul-anchor-toast">SOUL ANCHOR USED</div>
+    <canvas id="game" width="400" height="400" title="Click to toggle fullscreen" style="cursor:pointer;"></canvas>
     
-    <button class="classic-btn" onclick="buyShardWithDiamonds(1)">1 Shards<br><span class="btn-price">5 D</span></button>
-    <button class="classic-btn" onclick="buyShardWithDiamonds(3)">3 Shards<br><span class="btn-price">12 D</span></button>
-    <button class="classic-btn" onclick="buyShardWithDiamonds(10)">10 Shards<br><span class="btn-price">35 D</span></button>
-    <button class="classic-btn" onclick="buyShardWithDiamonds(15)">15 Shards<br><span class="btn-price">50 D</span></button>
-  </div>
-
-  <!-- Collapsible SP Bundles -->
-  <button class="panel accordion stat-val" style="color:var(--xp); border-left:4px solid var(--xp); border-radius:12px 12px 0 0; margin-bottom:0;">SP Bundles</button>
-
-<div class="panel-content"
-  style="border-left:4px solid var(--xp); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
-  <span class="stat-label">Snake Points (Buy With Diamonds)</span>
-
-  <button class="classic-btn" onclick="buySPWithDiamonds(5)">+5 SP<br><span class="btn-price">5 D</span></button>
-  <button class="classic-btn" onclick="buySPWithDiamonds(15)">+15 SP<br><span class="btn-price">12 D</span></button>
-  <button class="classic-btn" onclick="buySPWithDiamonds(40)">+40 SP<br><span class="btn-price">30 D</span></button>
-  <button class="classic-btn" onclick="buySPWithDiamonds(100)">+100 SP<br><span class="btn-price">65 D</span></button>
-</div>
-
-<div class="panel" style="border-left-color: var(--gold);">
-    <span class="stat-label">Instant 10 Levels</span>
-        <button class="classic-btn" onclick="buyLevelBoost()">+10 Levels<br><span class="btn-price">50 D</span></button>
-</div>
-<div class="panel" style="border-left-color: var(--xp);">
-    <span class="stat-label">Guaranteed Rarity Box</span>
-    <span class="stat-val" style="color:var(--xp)">Rigged Boxes!</span>
-
-    <div class="bank-grid">
-        <button class="bank-btn" onclick="openGuaranteedLootBox('RARE')">RARE Box<br><span class="btn-price">30 D</span></button>
-        <button class="bank-btn" onclick="openGuaranteedLootBox('EPIC')">EPIC Box<br><span class="btn-price">60 D</span></button>
-        <button class="bank-btn" onclick="openGuaranteedLootBox('ULTRA')">ULTRA Box<br><span class="btn-price">100 D</span></button>
-        <button class="bank-btn" onclick="openGuaranteedLootBox('LEGENDARY')">LEGENDARY Box<br><span class="btn-price">200 D</span></button>
+    <!-- New Save Code Section -->
+    <div id="save-code-panel" style="margin-top:15px; background:#151515; padding:10px; border-radius:8px; border:1px solid #333;">
+        <span class="stat-label">Save Code (Export/Import)</span>
+        <textarea id="save-code-box" style="width:100%; background:#000; color:var(--xp); border:1px solid #222; font-family:monospace; font-size:10px; margin-top:5px; resize:none; padding:5px;" rows="3" placeholder="Paste save code here..."></textarea>
+        <div style="display:flex; gap:5px; margin-top:5px;">
+            <button class="classic-btn" style="padding:5px; flex:1; justify-content:center;" onclick="exportSave()">Export Code</button>
+            <button class="classic-btn" style="padding:5px; flex:1; justify-content:center;" onclick="importSave()">Import Code</button>
+        </div>
     </div>
 </div>
+
+    <div class="sidebar">
+        <div class="panel" id="hero-panel">
+            <span class="stat-label">Hero Level</span>
+            <span class="stat-val" id="lvl-text">LVL 1</span>
+            <div class="xp-bg"><div id="xp-fill"></div></div>
+            <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:0.7em">
+                <div style="display:flex; align-items:center; gap:6px;">
+  <span id="xp-multi-disp" style="color:var(--xp)">1.0x XP</span>
+  <span id="xp-boost-disp"
+        style="color:var(--gold); font-size:0.80em; opacity:0.95;">
+    +0.00 (B:0.00 / A:0.00)
+  </span>
 </div>
-</div>
+                <span id="sp-disp" style="color:var(--xp)">0 SP</span>
+            </div>
+            <div id="phase-status" style="font-size:0.7em; color:var(--soul); margin-top:5px; display:none;">PHASE: READY</div>
+        </div>
+
+        <div class="panel" id="minimap-panel" style="border-left:4px solid var(--gold); min-height:160px;"></div>
+
+        <div id="permanent-skills-panel">
+            <button class="panel accordion stat-val" style="color:var(--xp); border-left:4px solid var(--xp); border-radius:12px 12px 0 0; margin-bottom:0;">Permanent Skills</button>
+            <div class="panel-content" style="display:block; border-left:4px solid var(--xp); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
+                <button class="classic-btn" onclick="upgrade('speed')">Speed <span class="btn-price" id="cost-speed">1 SP</span></button>
+                <button class="classic-btn" onclick="upgrade('size')">Size <span class="btn-price" id="cost-size">1 SP</span></button>
+                <button class="classic-btn" onclick="upgrade('evo')">Growth <span class="btn-price" id="cost-evo">1 SP</span></button>
+            </div>
+        </div>
+
+        <div id="cheat-area" style="display:none;">
+            <button class="classic-btn" style="background:#4ecca3; color:black; font-weight:bold; justify-content:center;" onclick="godMode()">CHEAT: MAX ALL</button>
+        </div>
+
+        <button class="danger-btn" onclick="resetGame()">RESET (R)</button>
+        <button class="danger-btn title-return-btn" onclick="returnToTitle()">TITLE SCREEN (T)</button>
+    </div>
 </div>
 
 <div id="credits-modal" class="modal">
@@ -1448,7 +1322,7 @@ function applyAppleRewards(multiplier = 1, countAsApple = true) {
         if (data.lvl >= 10 && !data.soulRevealed) lvlEl.classList.add('lvl-ready');
         else { lvlEl.classList.remove('lvl-ready'); if (data.soulRevealed) lvlEl.style.color = "var(--soul)"; }
         const altar = document.getElementById('soul-altar');
-if (data.soulRevealed) {
+if (altar && data.soulRevealed) {
     altar.style.display = 'block';
     altar.style.pointerEvents = 'auto';
 }
@@ -1474,7 +1348,7 @@ if (boostEl) {
         document.getElementById('cost-speed').innerText = data.cSpd + " SP";
         document.getElementById('cost-size').innerText = data.cSz + " SP";
         document.getElementById('cost-evo').innerText = data.cEvo + " SP"; // Added evo counter
-        document.getElementById('shard-count').innerText = data.shards;
+        const shardEl = document.getElementById('shard-count'); if (shardEl) shardEl.innerText = data.shards;
         const shardBlack = document.getElementById("shard-count-black");
         if (shardBlack) shardBlack.innerText = data.shards;
 
@@ -1984,12 +1858,8 @@ function resetPhasePremonitionPreview() {
     let nx = apple.x + d.x;
     let ny = apple.y + d.y;
 
-    if (data.noWall) {
-      nx = (nx + 20) % 20;
-      ny = (ny + 20) % 20;
-    } else if (nx < 0 || nx >= 20 || ny < 0 || ny >= 20) {
-      return;
-    }
+    nx = (nx + 20) % 20;
+    ny = (ny + 20) % 20;
 
     const onSnake = snake.some(s => s.x === nx && s.y === ny);
     const hitsMain = food && apple !== food && food.x === nx && food.y === ny;
@@ -3180,22 +3050,9 @@ window.addEventListener("keydown", (e) => {
         
         const head = {x: snake[0].x + dx, y: snake[0].y + dy};
         
-        // Wall Logic
-        if (data.noWall) { if (head.x < 0) head.x = 19; else if (head.x > 19) head.x = 0; if (head.y < 0) head.y = 19; else if (head.y > 19) head.y = 0; } 
-        else if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20) {
-            if (data.shedOnImpact) {
-                const shedAmount = getSheddingProfile().tails;
-                if (shedTailSegments(shedAmount)) {
-                    setTimeout(gameLoop, getLoopDelay());
-                    return;
-                }
-            }
-            if (tryUseSoulInsurance(head)) {
-                setTimeout(gameLoop, getLoopDelay());
-                return;
-            }
-            data.diedLastRun = true; save(); location.reload(); return;
-        }
+        // Wall Logic — always wrap (borderless/infinite mode)
+        if (head.x < 0) head.x = 19; else if (head.x > 19) head.x = 0;
+        if (head.y < 0) head.y = 19; else if (head.y > 19) head.y = 0;
         
         // Self Collision (Disabled if Phasing)
         if (!isPhasing && isSelfCollisionFast(head)) {
@@ -3537,7 +3394,7 @@ function importSave() {
 const acc = document.querySelectorAll('.accordion');
 acc.forEach(a => {
   const sectionTitle = (a.textContent || '').toLowerCase();
-  if (sectionTitle.includes('bank') || sectionTitle.includes('skin shop') || sectionTitle.includes('buff shop') || sectionTitle.includes('sp bundles') || sectionTitle.includes('permanent skills') || sectionTitle.includes('soul altar') || sectionTitle.includes('apple shop')) {
+  if (sectionTitle.includes('bank') || sectionTitle.includes('skin shop') || sectionTitle.includes('permanent skills') || sectionTitle.includes('apple shop')) {
     const initialPanel = a.nextElementSibling;
     if (initialPanel) initialPanel.style.display = 'block';
   }
