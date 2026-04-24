@@ -721,8 +721,67 @@
         <div id="snazzeria-panel" style="margin-top:6px;">
             <button class="panel accordion stat-val" style="color:var(--gold); border-left:4px solid var(--gold); border-radius:12px 12px 0 0; margin-bottom:0;">Snazzeria</button>
             <div class="panel-content" style="border-left:4px solid var(--gold); border-radius:0 0 12px 12px; padding:8px; margin-top:0;">
-                <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Kitchen</button>
-                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Kitchen details.</div>
+                <button class="accordion" style="font-size:0.85em; border-left:3px solid #e8a020; border-radius:6px 6px 0 0;">Kitchen</button>
+                <div class="panel-content" style="padding:8px 10px; border-left:3px solid #e8a020; border-radius:0 0 6px 6px; margin-bottom:5px;">
+
+                  <div class="ku-entry" style="margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <b style="color:#ffd700;font-size:0.9em;">Better Sauce</b>
+                      <button id="ku-btn-betterSauce" class="classic-btn" style="font-size:0.75em;padding:3px 9px;" onclick="buyKitchenUpgrade('betterSauce')">50 gold</button>
+                    </div>
+                    <div style="font-size:0.75em;color:#aaa;margin-top:2px;">+1 passive gold/sec · Apples leave a flavor trail (follow for +2 gold) · <i style="color:#888;">"Customers keep coming back…"</i></div>
+                  </div>
+
+                  <div class="ku-entry" style="margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <b style="color:#ffd700;font-size:0.9em;">Fresh Ingredients</b>
+                      <button id="ku-btn-freshIngredients" class="classic-btn" style="font-size:0.75em;padding:3px 9px;" onclick="buyKitchenUpgrade('freshIngredients')">100 gold</button>
+                    </div>
+                    <div style="font-size:0.75em;color:#aaa;margin-top:2px;">Apples have tiers: <span style="color:#fff;">normal</span> / <span style="color:#adff2f;">fresh (+3g)</span> / <span style="color:#fff;text-shadow:0 0 6px #fff;">premium (+8g)</span> · Consecutive streak multiplies gold (max +100%) · Missing resets streak</div>
+                  </div>
+
+                  <div class="ku-entry" style="margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <b style="color:#ffd700;font-size:0.9em;">Faster Ovens</b>
+                      <button id="ku-btn-fasterOvens" class="classic-btn" style="font-size:0.75em;padding:3px 9px;" onclick="buyKitchenUpgrade('fasterOvens')">150 gold</button>
+                    </div>
+                    <div style="font-size:0.75em;color:#aaa;margin-top:2px;">Passive gold ticks 2× faster · Apples burn if ignored (grey = burnt, eating costs −2 gold & resets streak)</div>
+                  </div>
+
+                  <div class="ku-entry" style="margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <b style="color:#ffd700;font-size:0.9em;">Extra Tables</b>
+                      <button id="ku-btn-extraTables" class="classic-btn" style="font-size:0.75em;padding:3px 9px;" onclick="buyKitchenUpgrade('extraTables')">200 gold</button>
+                    </div>
+                    <div style="font-size:0.75em;color:#aaa;margin-top:2px;">+1 apple always on board (3 total) · +2 passive gold/sec</div>
+                  </div>
+
+                  <div class="ku-entry" style="margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <b style="color:#ffd700;font-size:0.9em;">Cleaner Kitchen</b>
+                      <button id="ku-btn-cleanerKitchen" class="classic-btn" style="font-size:0.75em;padding:3px 9px;" onclick="buyKitchenUpgrade('cleanerKitchen')">150 gold</button>
+                    </div>
+                    <div style="font-size:0.75em;color:#aaa;margin-top:2px;">×1.5 gold generation multiplier (applies to all kitchen gold)</div>
+                  </div>
+
+                  <div class="ku-entry" style="margin-bottom:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <b style="color:#ffd700;font-size:0.9em;">Apple Supplier Contract</b>
+                      <button id="ku-btn-appleSupplier" class="classic-btn" style="font-size:0.75em;padding:3px 9px;" onclick="buyKitchenUpgrade('appleSupplier')">100 gold</button>
+                    </div>
+                    <div style="font-size:0.75em;color:#aaa;margin-top:2px;">+20% dual-apple spawn chance</div>
+                  </div>
+
+                  <div class="ku-entry">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                      <b style="color:#ffd700;font-size:0.9em;">Expanded Dining Area</b>
+                      <button id="ku-btn-expandedDining" class="classic-btn" style="font-size:0.75em;padding:3px 9px;" onclick="buyKitchenUpgrade('expandedDining')">125 gold</button>
+                    </div>
+                    <div style="font-size:0.75em;color:#aaa;margin-top:2px;">+15% dual-apple spawn chance</div>
+                  </div>
+
+                  <div id="kitchen-passive-display" style="margin-top:8px;font-size:0.75em;color:var(--gold);display:none;"></div>
+                </div>
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Animatronics</button>
                 <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Animatronics details.</div>
@@ -979,7 +1038,14 @@
         totalApplesEaten: 0,
         totalPurchases: 0,
         cardPurchaseCount: 0,
-        legendaryLootOpened: false
+        legendaryLootOpened: false,
+        kitchenBetterSauce: false,
+        kitchenFreshIngredients: false,
+        kitchenFasterOvens: false,
+        kitchenExtraTables: false,
+        kitchenCleanerKitchen: false,
+        kitchenAppleSupplier: false,
+        kitchenExpandedDining: false
     };
     let data = Object.assign({}, defaultSaveData, JSON.parse(localStorage.getItem('Snake_2026_SoulReveal')) || {});
     if (!Array.isArray(data.owned)) data.owned = ['#00fbff'];
@@ -1115,6 +1181,17 @@
     let phaseCooldownTimer = null;
     let appleMoveTick = 0;
     let bonusFood = null;
+    // Kitchen system state
+    let flavorTrails = [];
+    let appleStreak = 0;
+    let mainAppleQuality = 0;
+    let bonusAppleQuality = 0;
+    let thirdFood = null;
+    let thirdAppleQuality = 0;
+    let mainAppleAge = 0;
+    let bonusAppleAge = 0;
+    let thirdAppleAge = 0;
+    let passiveGoldInterval = null;
     let nextAppleLocation = null;
     let phasePreviewUntil = 0;
     let applesEatenThisRun = 0;
@@ -1172,7 +1249,94 @@ function getEchoGrowthBonus() {
 }
 
 function getDualAppleChance() {
-  return Math.min(55, (data.dualAppleLevel || 0) * 11);
+  let base = Math.min(55, (data.dualAppleLevel || 0) * 11);
+  if (data.kitchenAppleSupplier) base = Math.min(95, base + 20);
+  if (data.kitchenExpandedDining) base = Math.min(95, base + 15);
+  return base;
+}
+
+// ── Kitchen helpers ────────────────────────────────────────────────────
+function rollAppleQuality() {
+  if (!data.kitchenFreshIngredients) return 0;
+  const r = Math.random();
+  if (r < 0.10) return 2;
+  if (r < 0.30) return 1;
+  return 0;
+}
+
+function getAppleQualityGoldBonus(quality) {
+  if (quality === 2) return 8;
+  if (quality === 1) return 3;
+  return 0;
+}
+
+const APPLE_BURN_TICKS = 20;
+
+function isAppleBurnt(age) {
+  return data.kitchenFasterOvens && age >= APPLE_BURN_TICKS;
+}
+
+function getKitchenGoldMultiplier() {
+  return data.kitchenCleanerKitchen ? 1.5 : 1.0;
+}
+
+function getStreakGoldMultiplier() {
+  if (!data.kitchenFreshIngredients) return 1;
+  return 1 + Math.min(appleStreak, 10) * 0.1;
+}
+
+function getKitchenPassiveGoldPerSec() {
+  let rate = 0;
+  if (data.kitchenBetterSauce) rate += 1;
+  if (data.kitchenExtraTables) rate += 2;
+  return Math.ceil(rate * getKitchenGoldMultiplier());
+}
+
+function startKitchenPassiveGold() {
+  if (passiveGoldInterval) clearInterval(passiveGoldInterval);
+  const perSec = getKitchenPassiveGoldPerSec();
+  if (perSec <= 0) return;
+  const tickMs = data.kitchenFasterOvens ? 500 : 1000;
+  const perTick = data.kitchenFasterOvens ? perSec / 2 : perSec;
+  passiveGoldInterval = setInterval(() => {
+    if (isPaused || modalActive || endingActive) return;
+    data.gems += Math.ceil(perTick);
+    save();
+    updateUI();
+  }, tickMs);
+}
+
+function respawnThirdApple() {
+  if (!data.kitchenExtraTables) { thirdFood = null; return; }
+  const excluded = [];
+  if (food) excluded.push(food);
+  if (bonusFood) excluded.push(bonusFood);
+  const next = pickAppleSpot(excluded);
+  if (next) { thirdFood = next; thirdAppleAge = 0; thirdAppleQuality = rollAppleQuality(); }
+}
+
+function buyKitchenUpgrade(type) {
+  const costs = {
+    betterSauce: 50, freshIngredients: 100, fasterOvens: 150,
+    extraTables: 200, cleanerKitchen: 150, appleSupplier: 100, expandedDining: 125
+  };
+  const keys = {
+    betterSauce: 'kitchenBetterSauce', freshIngredients: 'kitchenFreshIngredients',
+    fasterOvens: 'kitchenFasterOvens', extraTables: 'kitchenExtraTables',
+    cleanerKitchen: 'kitchenCleanerKitchen', appleSupplier: 'kitchenAppleSupplier',
+    expandedDining: 'kitchenExpandedDining'
+  };
+  const cost = costs[type];
+  const key = keys[type];
+  if (!cost || !key) return;
+  if (data[key]) return;
+  if (data.gems < cost) { alert('Not enough gold! Need ' + cost + '.'); return; }
+  data.gems -= cost;
+  data[key] = true;
+  if (type === 'extraTables' && food) respawnThirdApple();
+  startKitchenPassiveGold();
+  save();
+  updateUI();
 }
 
 function getGoldAppleCost() {
@@ -1297,7 +1461,7 @@ function buyImpactSheddingUpgrade() {
   updateUI();
 }
 
-function applyAppleRewards(multiplier = 1, countAsApple = true) {
+function applyAppleRewards(multiplier = 1, countAsApple = true, qualityBonus = 0) {
     if (countAsApple) {
         applesEatenThisRun += multiplier;
         data.totalApplesEaten = (data.totalApplesEaten || 0) + multiplier;
@@ -1309,9 +1473,11 @@ function applyAppleRewards(multiplier = 1, countAsApple = true) {
     const goldAppleXPBonus = getGoldAppleXPMultiplier();
     const phaseXPScale = isPhasing && data.phaseGreed ? 0 : (isPhasing && data.phaseExpertise ? 1.75 : 1);
     const phaseGoldScale = isPhasing && data.phaseExpertise ? 0 : (isPhasing && data.phaseGreed ? 1.75 : 1);
+    const kitchenMult = getKitchenGoldMultiplier() * getStreakGoldMultiplier();
 
     data.exp += 25 * multiplier * totalXP * goldAppleXPBonus * phaseXPScale;
-    data.gems += Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale);
+    data.gems += Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale * kitchenMult);
+    if (qualityBonus > 0) data.gems += Math.ceil(qualityBonus * getKitchenGoldMultiplier());
     growCount += (data.evo + tEvo - 1) * multiplier;
 
     if ((data.echoGrowthLevel || 0) > 0 && countAsApple) {
@@ -1577,7 +1743,45 @@ if (boostEl) {
         if (data.bgColor) { document.documentElement.style.setProperty('--dark', data.bgColor); const inp = document.getElementById('bg-color-input'); if (inp) inp.value = data.bgColor; }
         // Update quick-turn button state
         if (data.quickTurn) { const qtBtn = document.getElementById('quick-turn-btn'); if (qtBtn) { qtBtn.style.opacity='0.4'; qtBtn.style.pointerEvents='none'; qtBtn.innerHTML='Quick Turn <span class="btn-price">OWNED</span>'; } }
-    
+
+        // Kitchen upgrade button states
+        const kuDefs = [
+            { id: 'betterSauce', key: 'kitchenBetterSauce', label: 'Better Sauce', cost: 50 },
+            { id: 'freshIngredients', key: 'kitchenFreshIngredients', label: 'Fresh Ingredients', cost: 100 },
+            { id: 'fasterOvens', key: 'kitchenFasterOvens', label: 'Faster Ovens', cost: 150 },
+            { id: 'extraTables', key: 'kitchenExtraTables', label: 'Extra Tables', cost: 200 },
+            { id: 'cleanerKitchen', key: 'kitchenCleanerKitchen', label: 'Cleaner Kitchen', cost: 150 },
+            { id: 'appleSupplier', key: 'kitchenAppleSupplier', label: 'Apple Supplier Contract', cost: 100 },
+            { id: 'expandedDining', key: 'kitchenExpandedDining', label: 'Expanded Dining Area', cost: 125 }
+        ];
+        kuDefs.forEach(d => {
+            const btn = document.getElementById('ku-btn-' + d.id);
+            if (!btn) return;
+            if (data[d.key]) {
+                btn.textContent = 'OWNED';
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            } else {
+                btn.textContent = d.cost + ' gold';
+                btn.disabled = false;
+                btn.style.opacity = data.gems >= d.cost ? '1' : '0.5';
+            }
+        });
+        const kpd = document.getElementById('kitchen-passive-display');
+        if (kpd) {
+            const rate = getKitchenPassiveGoldPerSec();
+            const streak = appleStreak || 0;
+            if (rate > 0 || streak > 0) {
+                kpd.style.display = '';
+                let txt = '';
+                if (rate > 0) txt += '+' + rate + '/sec passive';
+                if (data.kitchenFreshIngredients && streak > 0) txt += (txt ? ' · ' : '') + 'Streak: ' + streak + ' (×' + getStreakGoldMultiplier().toFixed(1) + ')';
+                kpd.textContent = txt;
+            } else {
+                kpd.style.display = 'none';
+            }
+        }
+
     window.buySoulUpgrade = function(type) {
     const costs = {
         noWall: 10, quickTurn: 8, phase: 1 + data.phasePower, dualPhase: 2, phaseGreed: 3, phaseExpertise: 3, phasePremonition: 4, phaseCharge: 5, temporalPhaseSlow: 6, soulInsurance: 2, fracturedSoul: 4, immortalPhase: 10
@@ -1685,13 +1889,19 @@ function pickAppleSpot(exclude = []) {
     function generateFood() {
     food = pickAppleSpot();
     bonusFood = null;
+    thirdFood = null;
 
     if (!food) return;
+
+    mainAppleAge = 0; mainAppleQuality = rollAppleQuality();
 
     const shouldSpawnDual = Math.random() * 100 < getDualAppleChance();
     if (shouldSpawnDual) {
         bonusFood = pickAppleSpot([food]);
+        bonusAppleAge = 0; bonusAppleQuality = rollAppleQuality();
     }
+
+    if (data.kitchenExtraTables) respawnThirdApple();
 
     queueNextAppleLocation();
     apple_growth = apple_growth + 1
@@ -1699,18 +1909,22 @@ function pickAppleSpot(exclude = []) {
 
     function respawnMainApple() {
   const blocked = bonusFood ? [bonusFood] : [];
+  if (thirdFood) blocked.push(thirdFood);
   if (data.phasePremonition && nextAppleLocation && !isSpotBlocked(nextAppleLocation, blocked)) {
     food = { x: nextAppleLocation.x, y: nextAppleLocation.y };
   } else {
     const nextFood = pickAppleSpot(blocked);
     if (nextFood) food = nextFood;
   }
+  mainAppleAge = 0; mainAppleQuality = rollAppleQuality();
   queueNextAppleLocation();
 }
 
 function respawnBonusApple() {
-  const nextBonus = pickAppleSpot(food ? [food] : []);
-  if (nextBonus) bonusFood = nextBonus;
+  const excluded = food ? [food] : [];
+  if (thirdFood) excluded.push(thirdFood);
+  const nextBonus = pickAppleSpot(excluded);
+  if (nextBonus) { bonusFood = nextBonus; bonusAppleAge = 0; bonusAppleQuality = rollAppleQuality(); }
 }
 
 function getGoldAppleRenderColor(levelOffset = 0) {
@@ -1867,6 +2081,7 @@ function resetPhasePremonitionPreview() {
   }
 }
 
+    /* Apple movement disabled
     function moveApple() {
   const moveOneApple = (apple) => {
     if (!apple) return;
@@ -1898,6 +2113,7 @@ function resetPhasePremonitionPreview() {
   moveOneApple(food);
   moveOneApple(bonusFood);
 }
+    */
 
     function getTotalXPMultiplier() {
 
@@ -3096,6 +3312,7 @@ window.addEventListener("keydown", (e) => {
         }
         
         snake.unshift(head);
+        /* Apple movement disabled
         // 🍎 Apple movement scaling with snake speed
 appleMoveTick++;
 
@@ -3117,20 +3334,54 @@ if (appleMoveTick >= appleMoveRate) {
   appleMoveTick = 0;
   moveApple();
 }
+        */
+        // Kitchen: increment apple ages each tick
+        mainAppleAge++;
+        if (bonusFood) bonusAppleAge++; else bonusAppleAge = 0;
+        if (thirdFood) thirdAppleAge++; else thirdAppleAge = 0;
+
         const ateMainApple = head.x === food.x && head.y === food.y;
         const ateBonusApple = bonusFood && head.x === bonusFood.x && head.y === bonusFood.y;
+        const ateThirdApple = thirdFood && head.x === thirdFood.x && head.y === thirdFood.y;
+
+        // Kitchen: Better Sauce flavor trail bonus
+        if (data.kitchenBetterSauce) {
+            const now = Date.now();
+            flavorTrails = flavorTrails.filter(t => t.expiresAt > now);
+            const hitTrailIdx = flavorTrails.findIndex(t => t.x === head.x && t.y === head.y);
+            if (hitTrailIdx >= 0) {
+                flavorTrails.splice(hitTrailIdx, 1);
+                data.gems += Math.ceil(2 * getKitchenGoldMultiplier());
+            }
+        }
+
         if (soulHusk && soulHusk.segments && soulHusk.segments.some(seg => seg.x === head.x && seg.y === head.y)) {
             growCount += soulHusk.restoreLength;
             soulHusk = null;
         }
-        if (ateMainApple || ateBonusApple) {
+        if (ateMainApple || ateBonusApple || ateThirdApple) {
             // ✅ Clear death lore on first apple
   const box = document.getElementById("save-code-box");
   if (box && box.value && data.diedLastRun === false) {
     box.value = "... The memory fades...";
     setTimeout(() => box.value = "", 1200);
   }
-            applyAppleRewards(1, true);
+            // Kitchen: Better Sauce — leave flavor trail at eaten position
+            if (data.kitchenBetterSauce) {
+                const tp = ateMainApple ? {x:food.x,y:food.y} : (ateBonusApple ? {x:bonusFood.x,y:bonusFood.y} : {x:thirdFood.x,y:thirdFood.y});
+                flavorTrails.push({x: tp.x, y: tp.y, expiresAt: Date.now() + 3000});
+            }
+            // Kitchen: Fresh Ingredients — burn check + streak + quality
+            const ateAge = ateMainApple ? mainAppleAge : (ateBonusApple ? bonusAppleAge : thirdAppleAge);
+            const ateQuality = ateMainApple ? mainAppleQuality : (ateBonusApple ? bonusAppleQuality : thirdAppleQuality);
+            const ateBurnt = isAppleBurnt(ateAge);
+            if (ateBurnt) {
+                data.gems = Math.max(0, data.gems - 2);
+                appleStreak = 0;
+            } else {
+                appleStreak++;
+            }
+            applyAppleRewards(1, true, ateBurnt ? 0 : getAppleQualityGoldBonus(ateQuality));
             if ((data.sheddingLevel || 0) > 0) {
                 const profile = getSheddingProfile();
                 if (applesEatenThisRun % profile.apples === 0) {
@@ -3144,9 +3395,10 @@ if (appleMoveTick >= appleMoveRate) {
             if (data.exp >= data.nxt) { data.lvl++; data.sp++; data.xpM += 0.2; data.exp = 0; data.nxt *= 1.10; }
             if (ateMainApple) respawnMainApple();
             if (ateBonusApple) respawnBonusApple();
+            if (ateThirdApple) respawnThirdApple();
             resetPhasePremonitionPreview();
             save(); updateUI();
-        } 
+        }
         else {
             const cannibalismIdx = data.cannibalism
                 ? shedTailPieces.findIndex(seg => seg.x === head.x && seg.y === head.y)
@@ -3176,12 +3428,40 @@ if (appleMoveTick >= appleMoveRate) {
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
         }
-        if (food) ctx.fillRect(food.x*grid+2, food.y*grid+2, grid-4, grid-4);
+        if (food) {
+            const mainBurnt = isAppleBurnt(mainAppleAge);
+            if (mainBurnt) { ctx.fillStyle = '#555'; ctx.shadowColor = '#333'; }
+            ctx.fillRect(food.x*grid+2, food.y*grid+2, grid-4, grid-4);
+            if (mainAppleQuality === 2 && !mainBurnt) {
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+                ctx.strokeRect(food.x*grid+3, food.y*grid+3, grid-6, grid-6);
+            } else if (mainAppleQuality === 1 && !mainBurnt) {
+                ctx.strokeStyle = 'rgba(255,255,200,0.6)'; ctx.lineWidth = 1;
+                ctx.strokeRect(food.x*grid+3, food.y*grid+3, grid-6, grid-6);
+            }
+        }
         if (bonusFood) {
             const bonusAppleColor = getGoldAppleRenderColor(1);
-            ctx.fillStyle = bonusAppleColor;
-            if (data.neonEnabled) ctx.shadowColor = bonusAppleColor;
+            const bonusBurnt = isAppleBurnt(bonusAppleAge);
+            ctx.fillStyle = bonusBurnt ? '#555' : bonusAppleColor;
+            if (data.neonEnabled) ctx.shadowColor = bonusBurnt ? '#333' : bonusAppleColor;
             ctx.fillRect(bonusFood.x*grid+2, bonusFood.y*grid+2, grid-4, grid-4);
+            if (bonusAppleQuality === 2 && !bonusBurnt) {
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+                ctx.strokeRect(bonusFood.x*grid+3, bonusFood.y*grid+3, grid-6, grid-6);
+            }
+        }
+        if (thirdFood) {
+            const thirdBurnt = isAppleBurnt(thirdAppleAge);
+            const thirdColor = getGoldAppleRenderColor(2);
+            ctx.fillStyle = thirdBurnt ? '#555' : thirdColor;
+            ctx.shadowColor = thirdBurnt ? '#333' : thirdColor;
+            ctx.shadowBlur = data.neonEnabled ? 10 : 0;
+            ctx.fillRect(thirdFood.x*grid+2, thirdFood.y*grid+2, grid-4, grid-4);
+            if (thirdAppleQuality === 2 && !thirdBurnt) {
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+                ctx.strokeRect(thirdFood.x*grid+3, thirdFood.y*grid+3, grid-6, grid-6);
+            }
         }
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
@@ -3211,7 +3491,22 @@ if (appleMoveTick >= appleMoveRate) {
             ctx.fillStyle = 'rgba(160,32,240,0.22)';
             ctx.fillRect(nextAppleLocation.x*grid+4, nextAppleLocation.y*grid+4, grid-8, grid-8);
         }
-        
+        // Kitchen: Better Sauce — draw flavor trails
+        if (data.kitchenBetterSauce && flavorTrails.length > 0) {
+            const now = Date.now();
+            flavorTrails.forEach(t => {
+                const frac = Math.max(0, (t.expiresAt - now) / 3000);
+                ctx.globalAlpha = frac * 0.7;
+                ctx.fillStyle = '#ffcc44';
+                ctx.shadowColor = '#ffcc44';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(t.x*grid+grid/2, t.y*grid+grid/2, 4, 0, Math.PI*2);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.globalAlpha = 1;
+        }
+
         // Visuals
         if (data.neonEnabled && (data.owned.indexOf(data.skin) >= 3 || isPhasing || cheatActive)) { particles.push({x: snake[0].x*grid+10, y: snake[0].y*grid+10, life: 1, c: isPhasing ? "white" : getActiveSnakeColor()}); }
         particles = data.neonEnabled
@@ -3333,6 +3628,13 @@ function init() {
     tSz = 0;
     tEvo = 0;
 
+    // Kitchen runtime reset
+    flavorTrails = [];
+    appleStreak = 0;
+    mainAppleQuality = 0; bonusAppleQuality = 0; thirdAppleQuality = 0;
+    mainAppleAge = 0; bonusAppleAge = 0; thirdAppleAge = 0;
+    thirdFood = null;
+
     // ===== SHOW DEATH LORE ON NEW RUN =====
 if (data.diedLastRun) {
   const box = document.getElementById("save-code-box");
@@ -3378,7 +3680,7 @@ function importSave() {
     }
 }
 
-    init(); updateUI(); applyLanguage(); gameLoop();
+    init(); updateUI(); applyLanguage(); gameLoop(); startKitchenPassiveGold();
 // Fullscreen on canvas click
 (function() {
     const gameCanvas = document.getElementById('game');
