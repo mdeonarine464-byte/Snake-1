@@ -711,7 +711,7 @@
         <div class="panel" id="minimap-panel" style="border-left:4px solid var(--gold); min-height:160px;">
             <span class="stat-label">Minimap</span>
             <div style="margin-top:8px; display:grid; gap:6px;">
-                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Kitchen</span><span style="color:var(--gold);">0%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Kitchen</span><span id="minimap-kitchen-pct" style="color:var(--gold);">0%</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Animatronics</span><span style="color:var(--gold);">0%</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Arcade</span><span style="color:var(--gold);">0%</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Snakelocks</span><span style="color:var(--gold);">0%</span></div>
@@ -722,7 +722,58 @@
             <button class="panel accordion stat-val" style="color:var(--gold); border-left:4px solid var(--gold); border-radius:12px 12px 0 0; margin-bottom:0;">Snazzeria</button>
             <div class="panel-content" style="border-left:4px solid var(--gold); border-radius:0 0 12px 12px; padding:8px; margin-top:0;">
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Kitchen</button>
-                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Kitchen details.</div>
+                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">
+                    <div id="kitchen-streak" style="display:none; font-size:0.75em; color:var(--gold); margin-bottom:6px; text-align:center;"></div>
+                    <button id="kitchen-btn-betterSauce" class="classic-btn" onclick="buyKitchenUpgrade('betterSauce')">
+                        <span>
+                            <span style="font-weight:bold;">Better Sauce</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+1 passive gold/sec · Apples leave flavor trails for bonus gold<br>"Customers keep coming back…"</span>
+                        </span>
+                        <span class="btn-price">75G</span>
+                    </button>
+                    <button id="kitchen-btn-freshIngredients" class="classic-btn" onclick="buyKitchenUpgrade('freshIngredients')">
+                        <span>
+                            <span style="font-weight:bold;">Fresh Ingredients</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Apple quality tiers (normal/fresh/premium) · Consecutive streak multiplier · Missing one resets streak</span>
+                        </span>
+                        <span class="btn-price">150G</span>
+                    </button>
+                    <button id="kitchen-btn-fasterOvens" class="classic-btn" onclick="buyKitchenUpgrade('fasterOvens')">
+                        <span>
+                            <span style="font-weight:bold;">Faster Ovens</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Passive gold ticks faster · Move slightly faster · Apples burn if ignored (−5G penalty)</span>
+                        </span>
+                        <span class="btn-price">250G</span>
+                    </button>
+                    <button id="kitchen-btn-extraTables" class="classic-btn" onclick="buyKitchenUpgrade('extraTables')">
+                        <span>
+                            <span style="font-weight:bold;">Extra Tables</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+1 apple always on board · +2 passive gold/sec</span>
+                        </span>
+                        <span class="btn-price">350G</span>
+                    </button>
+                    <button id="kitchen-btn-cleanerKitchen" class="classic-btn" onclick="buyKitchenUpgrade('cleanerKitchen')">
+                        <span>
+                            <span style="font-weight:bold;">Cleaner Kitchen</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">×1.5 gold generation multiplier on all passive income</span>
+                        </span>
+                        <span class="btn-price">500G</span>
+                    </button>
+                    <button id="kitchen-btn-appleSupplier" class="classic-btn" onclick="buyKitchenUpgrade('appleSupplier')">
+                        <span>
+                            <span style="font-weight:bold;">Apple Supplier Contract</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+40% dual apple spawn chance · More apples on board</span>
+                        </span>
+                        <span class="btn-price">200G</span>
+                    </button>
+                    <button id="kitchen-btn-expandedDining" class="classic-btn" onclick="buyKitchenUpgrade('expandedDining')">
+                        <span>
+                            <span style="font-weight:bold;">Expanded Dining Area</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+1 extra apple slot · Apples stop moving</span>
+                        </span>
+                        <span class="btn-price">400G</span>
+                    </button>
+                </div>
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Animatronics</button>
                 <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Animatronics details.</div>
@@ -979,7 +1030,14 @@
         totalApplesEaten: 0,
         totalPurchases: 0,
         cardPurchaseCount: 0,
-        legendaryLootOpened: false
+        legendaryLootOpened: false,
+        kitchenBetterSauce: false,
+        kitchenFreshIngredients: false,
+        kitchenFasterOvens: false,
+        kitchenExtraTables: false,
+        kitchenCleanerKitchen: false,
+        kitchenAppleSupplier: false,
+        kitchenExpandedDining: false
     };
     let data = Object.assign({}, defaultSaveData, JSON.parse(localStorage.getItem('Snake_2026_SoulReveal')) || {});
     if (!Array.isArray(data.owned)) data.owned = ['#00fbff'];
@@ -1115,7 +1173,13 @@
     let phaseCooldownTimer = null;
     let appleMoveTick = 0;
     let bonusFood = null;
+    let extraFood1 = null;
+    let extraFood2 = null;
     let nextAppleLocation = null;
+    let appleStreak = 0;
+    let lastAppleEatTime = 0;
+    let flavorTrails = [];
+    let passiveGoldInterval = null;
     let phasePreviewUntil = 0;
     let applesEatenThisRun = 0;
     let shedTailPieces = [];
@@ -1172,7 +1236,9 @@ function getEchoGrowthBonus() {
 }
 
 function getDualAppleChance() {
-  return Math.min(55, (data.dualAppleLevel || 0) * 11);
+    const base = Math.min(55, (data.dualAppleLevel || 0) * 11);
+    if (data.kitchenAppleSupplier) return Math.min(100, base + 40);
+    return base;
 }
 
 function getGoldAppleCost() {
@@ -1297,10 +1363,166 @@ function buyImpactSheddingUpgrade() {
   updateUI();
 }
 
-function applyAppleRewards(multiplier = 1, countAsApple = true) {
+// ─── Kitchen Upgrade System ───────────────────────────────────────────────────
+
+const KITCHEN_COSTS = {
+    betterSauce: 75,
+    freshIngredients: 150,
+    fasterOvens: 250,
+    extraTables: 350,
+    cleanerKitchen: 500,
+    appleSupplier: 200,
+    expandedDining: 400
+};
+
+const KITCHEN_DATA_KEYS = {
+    betterSauce: 'kitchenBetterSauce',
+    freshIngredients: 'kitchenFreshIngredients',
+    fasterOvens: 'kitchenFasterOvens',
+    extraTables: 'kitchenExtraTables',
+    cleanerKitchen: 'kitchenCleanerKitchen',
+    appleSupplier: 'kitchenAppleSupplier',
+    expandedDining: 'kitchenExpandedDining'
+};
+
+function getPassiveGoldPerSec() {
+    let base = 0;
+    if (data.kitchenBetterSauce) base += 1;
+    if (data.kitchenExtraTables) base += 2;
+    if (base > 0 && data.kitchenCleanerKitchen) base = Math.ceil(base * 1.5);
+    return base;
+}
+
+function startPassiveGoldTick() {
+    if (passiveGoldInterval) clearInterval(passiveGoldInterval);
+    const intervalMs = data.kitchenFasterOvens ? 700 : 1000;
+    passiveGoldInterval = setInterval(() => {
+        const rate = getPassiveGoldPerSec();
+        if (rate > 0 && !isPaused && !titleActive && !endingActive) {
+            data.gems += rate;
+            const el = document.getElementById('gem-count');
+            if (el) el.innerText = data.gems.toLocaleString();
+        }
+    }, intervalMs);
+}
+
+function spawnExtraApple(slot) {
+    const excluded = [food, bonusFood, extraFood1, extraFood2].filter(Boolean);
+    const spot = pickAppleSpot(excluded);
+    if (!spot) return;
+    if (slot === 1) extraFood1 = { x: spot.x, y: spot.y, spawnTime: Date.now() };
+    else extraFood2 = { x: spot.x, y: spot.y, spawnTime: Date.now() };
+}
+
+function pruneFlavorTrails() {
+    const now = Date.now();
+    flavorTrails = flavorTrails.filter(t => now < t.expiresAt);
+}
+
+function collectFlavorTrail(x, y) {
+    const idx = flavorTrails.findIndex(t => t.x === x && t.y === y);
+    if (idx >= 0) {
+        flavorTrails.splice(idx, 1);
+        data.gems += 1;
+        const el = document.getElementById('gem-count');
+        if (el) el.innerText = data.gems.toLocaleString();
+    }
+}
+
+function getAppleQualityBonus(apple) {
+    if (!data.kitchenFreshIngredients || !apple || !apple.spawnTime) return 0;
+    const age = Date.now() - apple.spawnTime;
+    if (age < 2000) return 3;
+    if (age < 4000) return 1;
+    return 0;
+}
+
+function isAppleBurnt(apple) {
+    return data.kitchenFasterOvens && apple && apple.spawnTime && (Date.now() - apple.spawnTime) > 10000;
+}
+
+function isAppleWarning(apple) {
+    if (!data.kitchenFasterOvens || !apple || !apple.spawnTime) return false;
+    const age = Date.now() - apple.spawnTime;
+    return age > 7000 && age <= 10000;
+}
+
+function getAppleDisplayColor(apple, colorOffset) {
+    if (data.kitchenFasterOvens && apple && apple.spawnTime) {
+        const age = Date.now() - apple.spawnTime;
+        if (age > 10000) return '#2a1000';
+        if (age > 7000) return Math.floor(Date.now() / 250) % 2 === 0 ? '#c84000' : getGoldAppleRenderColor(colorOffset);
+    }
+    if (data.kitchenFreshIngredients && apple && apple.spawnTime) {
+        const age = Date.now() - apple.spawnTime;
+        if (age < 2000) return '#ffe566';
+        if (age < 4000) return '#88ff88';
+    }
+    return getGoldAppleRenderColor(colorOffset);
+}
+
+function updateKitchenUI() {
+    const keys = Object.values(KITCHEN_DATA_KEYS);
+    const owned = keys.filter(k => data[k]).length;
+    const pct = Math.round((owned / keys.length) * 100);
+    const el = document.getElementById('minimap-kitchen-pct');
+    if (el) el.textContent = pct + '%';
+
+    Object.entries(KITCHEN_COSTS).forEach(([type, cost]) => {
+        const btn = document.getElementById('kitchen-btn-' + type);
+        if (!btn) return;
+        const isOwned = data[KITCHEN_DATA_KEYS[type]];
+        btn.classList.toggle('locked-choice', isOwned);
+        const priceEl = btn.querySelector('.btn-price');
+        if (priceEl) priceEl.textContent = isOwned ? 'OWNED' : cost + 'G';
+    });
+
+    const streakEl = document.getElementById('kitchen-streak');
+    if (streakEl) {
+        if (data.kitchenFreshIngredients && appleStreak > 0) {
+            streakEl.style.display = 'block';
+            streakEl.textContent = '🔥 Streak x' + appleStreak + ' (+' + Math.min(10, appleStreak) * 10 + '% gold)';
+        } else {
+            streakEl.style.display = 'none';
+        }
+    }
+}
+
+function buyKitchenUpgrade(type) {
+    const dataKey = KITCHEN_DATA_KEYS[type];
+    if (!dataKey) return;
+    if (data[dataKey]) return;
+    const cost = KITCHEN_COSTS[type];
+    if (data.gems < cost) { alert('Not enough Gold (' + cost + 'G needed)'); return; }
+    data.gems -= cost;
+    data[dataKey] = true;
+    if (type === 'fasterOvens') startPassiveGoldTick();
+    if (type === 'extraTables' && food) spawnExtraApple(1);
+    if (type === 'expandedDining' && food) spawnExtraApple(2);
+    save();
+    updateUI();
+    updateKitchenUI();
+}
+
+// ─── End Kitchen Upgrade System ───────────────────────────────────────────────
+
+function applyAppleRewards(multiplier = 1, countAsApple = true, apple = null) {
     if (countAsApple) {
         applesEatenThisRun += multiplier;
         data.totalApplesEaten = (data.totalApplesEaten || 0) + multiplier;
+
+        // Fresh Ingredients: streak tracking
+        if (data.kitchenFreshIngredients) {
+            const now = Date.now();
+            if (lastAppleEatTime > 0 && now - lastAppleEatTime > 5000) appleStreak = 0;
+            appleStreak += multiplier;
+            lastAppleEatTime = now;
+        }
+
+        // Better Sauce: leave flavor trail at eaten apple's position
+        if (data.kitchenBetterSauce && apple) {
+            flavorTrails.push({ x: apple.x, y: apple.y, expiresAt: Date.now() + 5000 });
+        }
     }
     runXPBoostApple += 0.05 * multiplier;
 
@@ -1310,8 +1532,18 @@ function applyAppleRewards(multiplier = 1, countAsApple = true) {
     const phaseXPScale = isPhasing && data.phaseGreed ? 0 : (isPhasing && data.phaseExpertise ? 1.75 : 1);
     const phaseGoldScale = isPhasing && data.phaseExpertise ? 0 : (isPhasing && data.phaseGreed ? 1.75 : 1);
 
+    // Fresh Ingredients: streak multiplier (+10% gold per streak, max +100% at 10)
+    const streakMult = data.kitchenFreshIngredients ? (1 + Math.min(10, appleStreak) * 0.1) : 1;
+
+    // Fresh Ingredients: quality bonus flat gold
+    const qualityBonus = getAppleQualityBonus(apple) * multiplier;
+
+    // Faster Ovens: burnt apple penalty
+    const burnPenalty = isAppleBurnt(apple) ? 5 : 0;
+
     data.exp += 25 * multiplier * totalXP * goldAppleXPBonus * phaseXPScale;
-    data.gems += Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale);
+    const baseGold = Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale * streakMult) + qualityBonus;
+    data.gems += Math.max(0, baseGold - burnPenalty);
     growCount += (data.evo + tEvo - 1) * multiplier;
 
     if ((data.echoGrowthLevel || 0) > 0 && countAsApple) {
@@ -1637,6 +1869,7 @@ soulButtons.forEach(btn => {
     }
         });
     updatePhaseUI();
+    updateKitchenUI();
     }
     let apple_growth = 0
 
@@ -1683,34 +1916,42 @@ function pickAppleSpot(exclude = []) {
 
     // Function to genfood a new apple position, ensuring it doesn't spawn on the snake
     function generateFood() {
-    food = pickAppleSpot();
+    const spot = pickAppleSpot();
+    food = spot ? { x: spot.x, y: spot.y, spawnTime: Date.now() } : null;
     bonusFood = null;
+    extraFood1 = null;
+    extraFood2 = null;
 
     if (!food) return;
 
     const shouldSpawnDual = Math.random() * 100 < getDualAppleChance();
     if (shouldSpawnDual) {
-        bonusFood = pickAppleSpot([food]);
+        const bspot = pickAppleSpot([food]);
+        bonusFood = bspot ? { x: bspot.x, y: bspot.y, spawnTime: Date.now() } : null;
     }
+
+    if (data.kitchenExtraTables) spawnExtraApple(1);
+    if (data.kitchenExpandedDining) spawnExtraApple(2);
 
     queueNextAppleLocation();
     apple_growth = apple_growth + 1
     }
 
     function respawnMainApple() {
-  const blocked = bonusFood ? [bonusFood] : [];
+  const blocked = [bonusFood, extraFood1, extraFood2].filter(Boolean);
   if (data.phasePremonition && nextAppleLocation && !isSpotBlocked(nextAppleLocation, blocked)) {
-    food = { x: nextAppleLocation.x, y: nextAppleLocation.y };
+    food = { x: nextAppleLocation.x, y: nextAppleLocation.y, spawnTime: Date.now() };
   } else {
     const nextFood = pickAppleSpot(blocked);
-    if (nextFood) food = nextFood;
+    if (nextFood) food = { x: nextFood.x, y: nextFood.y, spawnTime: Date.now() };
   }
   queueNextAppleLocation();
 }
 
 function respawnBonusApple() {
-  const nextBonus = pickAppleSpot(food ? [food] : []);
-  if (nextBonus) bonusFood = nextBonus;
+  const excluded = [food, extraFood1, extraFood2].filter(Boolean);
+  const nextBonus = pickAppleSpot(excluded);
+  if (nextBonus) bonusFood = { x: nextBonus.x, y: nextBonus.y, spawnTime: Date.now() };
 }
 
 function getGoldAppleRenderColor(levelOffset = 0) {
@@ -2810,7 +3051,8 @@ function reducePhaseCooldown(seconds) {
 }
 
 function getLoopDelay() {
-    const baseDelay = Math.max(25, data.spd - tSpd);
+    let baseDelay = Math.max(25, data.spd - tSpd);
+    if (data.kitchenFasterOvens) baseDelay = Math.max(25, baseDelay - 8);
     if (isPhasing && data.temporalPhaseSlow) {
         return Math.round(baseDelay * 1.3);
     }
@@ -3096,41 +3338,50 @@ window.addEventListener("keydown", (e) => {
         }
         
         snake.unshift(head);
-        // 🍎 Apple movement scaling with snake speed
+
+        // Better Sauce: collect flavor trail at new head position
+        if (data.kitchenBetterSauce) {
+            pruneFlavorTrails();
+            collectFlavorTrail(head.x, head.y);
+        }
+        // Fresh Ingredients: reset streak if idle too long
+        if (data.kitchenFreshIngredients && lastAppleEatTime > 0 && Date.now() - lastAppleEatTime > 5000) {
+            appleStreak = 0;
+            lastAppleEatTime = 0;
+        }
+
+        // 🍎 Apple movement scaling with snake speed (disabled by Expanded Dining Area)
+        if (!data.kitchenExpandedDining) {
 appleMoveTick++;
-
-// snake delay = Math.max(25, data.spd - tSpd)
-// smaller delay = faster snake
 const snakeDelay = getLoopDelay();
-
-// Convert snake speed into an apple tick rate
-// Faster snake = apple moves more often
-const speedFactor = (140 / snakeDelay); // 140 is your default-ish speed baseline
-
-// final apple move rate
+const speedFactor = (140 / snakeDelay);
 const appleMoveRate = Math.max(
   2,
   Math.floor(APPLE_MOVE_BASE / (1 + speedFactor * APPLE_SCALE))
 );
-
 if (appleMoveTick >= appleMoveRate) {
   appleMoveTick = 0;
   moveApple();
 }
+        }
+
         const ateMainApple = head.x === food.x && head.y === food.y;
         const ateBonusApple = bonusFood && head.x === bonusFood.x && head.y === bonusFood.y;
+        const ateExtraApple1 = extraFood1 && head.x === extraFood1.x && head.y === extraFood1.y;
+        const ateExtraApple2 = extraFood2 && head.x === extraFood2.x && head.y === extraFood2.y;
         if (soulHusk && soulHusk.segments && soulHusk.segments.some(seg => seg.x === head.x && seg.y === head.y)) {
             growCount += soulHusk.restoreLength;
             soulHusk = null;
         }
-        if (ateMainApple || ateBonusApple) {
+        if (ateMainApple || ateBonusApple || ateExtraApple1 || ateExtraApple2) {
             // ✅ Clear death lore on first apple
   const box = document.getElementById("save-code-box");
   if (box && box.value && data.diedLastRun === false) {
     box.value = "... The memory fades...";
     setTimeout(() => box.value = "", 1200);
   }
-            applyAppleRewards(1, true);
+            const eatenApple = ateMainApple ? food : ateBonusApple ? bonusFood : ateExtraApple1 ? extraFood1 : extraFood2;
+            applyAppleRewards(1, true, eatenApple);
             if ((data.sheddingLevel || 0) > 0) {
                 const profile = getSheddingProfile();
                 if (applesEatenThisRun % profile.apples === 0) {
@@ -3144,9 +3395,11 @@ if (appleMoveTick >= appleMoveRate) {
             if (data.exp >= data.nxt) { data.lvl++; data.sp++; data.xpM += 0.2; data.exp = 0; data.nxt *= 1.10; }
             if (ateMainApple) respawnMainApple();
             if (ateBonusApple) respawnBonusApple();
+            if (ateExtraApple1) spawnExtraApple(1);
+            if (ateExtraApple2) spawnExtraApple(2);
             resetPhasePremonitionPreview();
-            save(); updateUI();
-        } 
+            save(); updateUI(); updateKitchenUI();
+        }
         else {
             const cannibalismIdx = data.cannibalism
                 ? shedTailPieces.findIndex(seg => seg.x === head.x && seg.y === head.y)
@@ -3167,22 +3420,41 @@ if (appleMoveTick >= appleMoveRate) {
         }
         
         drawPlayfieldBackground();
-        const primaryAppleColor = getGoldAppleRenderColor(0);
-        ctx.fillStyle = primaryAppleColor;
+
+        // Better Sauce: draw flavor trails
+        if (data.kitchenBetterSauce && flavorTrails.length > 0) {
+            ctx.shadowBlur = 0;
+            flavorTrails.forEach(t => {
+                ctx.fillStyle = 'rgba(100, 255, 160, 0.22)';
+                ctx.fillRect(t.x * grid + 1, t.y * grid + 1, grid - 2, grid - 2);
+                ctx.strokeStyle = 'rgba(100, 255, 160, 0.45)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(t.x * grid + 2, t.y * grid + 2, grid - 4, grid - 4);
+            });
+        }
+
+        // Draw apples with quality/burn visuals
+        const drawApple = (apple, colorOffset) => {
+            if (!apple) return;
+            const c = getAppleDisplayColor(apple, colorOffset);
+            ctx.fillStyle = c;
+            if (data.neonEnabled) { ctx.shadowColor = c; ctx.shadowBlur = 10; }
+            ctx.fillRect(apple.x * grid + 2, apple.y * grid + 2, grid - 4, grid - 4);
+            ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+        };
+
         if (data.neonEnabled) {
+            const primaryAppleColor = getAppleDisplayColor(food, 0);
             ctx.shadowColor = primaryAppleColor;
             ctx.shadowBlur = 10;
         } else {
             ctx.shadowColor = 'transparent';
             ctx.shadowBlur = 0;
         }
-        if (food) ctx.fillRect(food.x*grid+2, food.y*grid+2, grid-4, grid-4);
-        if (bonusFood) {
-            const bonusAppleColor = getGoldAppleRenderColor(1);
-            ctx.fillStyle = bonusAppleColor;
-            if (data.neonEnabled) ctx.shadowColor = bonusAppleColor;
-            ctx.fillRect(bonusFood.x*grid+2, bonusFood.y*grid+2, grid-4, grid-4);
-        }
+        drawApple(food, 0);
+        drawApple(bonusFood, 1);
+        drawApple(extraFood1, 0);
+        drawApple(extraFood2, 1);
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
         if (soulHusk && soulHusk.segments) {
@@ -3328,6 +3600,11 @@ function init() {
     soulAnchorPauseUntil = 0;
     soulHusk = null;
     phaseCharges = data.dualPhase ? 2 : 1;
+    appleStreak = 0;
+    lastAppleEatTime = 0;
+    flavorTrails = [];
+    extraFood1 = null;
+    extraFood2 = null;
     
     tSpd = 0;
     tSz = 0;
@@ -3378,7 +3655,7 @@ function importSave() {
     }
 }
 
-    init(); updateUI(); applyLanguage(); gameLoop();
+    init(); updateUI(); updateKitchenUI(); applyLanguage(); gameLoop(); startPassiveGoldTick();
 // Fullscreen on canvas click
 (function() {
     const gameCanvas = document.getElementById('game');
