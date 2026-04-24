@@ -722,7 +722,22 @@
             <button class="panel accordion stat-val" style="color:var(--gold); border-left:4px solid var(--gold); border-radius:12px 12px 0 0; margin-bottom:0;">Snazzeria</button>
             <div class="panel-content" style="border-left:4px solid var(--gold); border-radius:0 0 12px 12px; padding:8px; margin-top:0;">
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Kitchen</button>
-                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Kitchen details.</div>
+                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">
+                    <button class="classic-btn" id="kitchen-better-sauce-btn" onclick="buyKitchenUpgrade('betterSauce')">Better Sauce <span class="btn-price">4,000 G</span></button>
+                    <span class="upgrade-desc" id="kitchen-better-sauce-desc">+1 passive gold/sec. Apples leave a short flavor trail for bonus points. “Customers keep coming back…”</span>
+                    <button class="classic-btn" id="kitchen-fresh-ingredients-btn" onclick="buyKitchenUpgrade('freshIngredients')">Fresh Ingredients <span class="btn-price">9,000 G</span></button>
+                    <span class="upgrade-desc" id="kitchen-fresh-ingredients-desc">Apples roll quality tiers. Better apples award extra gold if grabbed before they expire. Consecutive apples build multiplier streaks.</span>
+                    <button class="classic-btn" id="kitchen-faster-ovens-btn" onclick="buyKitchenUpgrade('fasterOvens')">Faster Ovens <span class="btn-price">15,000 G</span></button>
+                    <span class="upgrade-desc" id="kitchen-faster-ovens-desc">Passive gold ticks faster, snake speed increases slightly, apples spawn faster, and unattended apples can burn (penalty).</span>
+                    <button class="classic-btn" id="kitchen-extra-tables-btn" onclick="buyKitchenUpgrade('extraTables')">Extra Tables <span class="btn-price">22,000 G</span></button>
+                    <span class="upgrade-desc" id="kitchen-extra-tables-desc">More apples can exist at once (max apples +1) and +2 passive gold/sec.</span>
+                    <button class="classic-btn" id="kitchen-cleaner-kitchen-btn" onclick="buyKitchenUpgrade('cleanerKitchen')">Cleaner Kitchen <span class="btn-price">30,000 G</span></button>
+                    <span class="upgrade-desc" id="kitchen-cleaner-kitchen-desc">Improves kitchen efficiency with a global gold generation multiplier.</span>
+                    <button class="classic-btn" id="kitchen-apple-supplier-btn" onclick="buyKitchenUpgrade('appleSupplier')">Apple Supplier Contract <span class="btn-price">38,000 G</span></button>
+                    <span class="upgrade-desc" id="kitchen-apple-supplier-desc">Supplier priority means apples appear on board more often.</span>
+                    <button class="classic-btn" id="kitchen-expanded-dining-btn" onclick="buyKitchenUpgrade('expandedDining')">Expanded Dining Area <span class="btn-price">48,000 G</span></button>
+                    <span class="upgrade-desc" id="kitchen-expanded-dining-desc">More floor coverage attracts more customers and more apples spawn.</span>
+                </div>
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Animatronics</button>
                 <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Animatronics details.</div>
@@ -979,7 +994,16 @@
         totalApplesEaten: 0,
         totalPurchases: 0,
         cardPurchaseCount: 0,
-        legendaryLootOpened: false
+        legendaryLootOpened: false,
+        kitchenUpgrades: {
+            betterSauce: false,
+            freshIngredients: false,
+            fasterOvens: false,
+            extraTables: false,
+            cleanerKitchen: false,
+            appleSupplier: false,
+            expandedDining: false
+        }
     };
     let data = Object.assign({}, defaultSaveData, JSON.parse(localStorage.getItem('Snake_2026_SoulReveal')) || {});
     if (!Array.isArray(data.owned)) data.owned = ['#00fbff'];
@@ -1000,6 +1024,10 @@
     if (typeof data.totalPurchases !== 'number') data.totalPurchases = 0;
     if (typeof data.cardPurchaseCount !== 'number') data.cardPurchaseCount = 0;
     if (typeof data.legendaryLootOpened !== 'boolean') data.legendaryLootOpened = false;
+if (!data.kitchenUpgrades || typeof data.kitchenUpgrades !== 'object') data.kitchenUpgrades = {};
+['betterSauce','freshIngredients','fasterOvens','extraTables','cleanerKitchen','appleSupplier','expandedDining'].forEach(key => {
+    if (typeof data.kitchenUpgrades[key] !== 'boolean') data.kitchenUpgrades[key] = false;
+});
     if (data.growthMode !== 'tail' && data.growthMode !== 'body') data.growthMode = 'tail';
 
     if (data.customSkinHead) snakeImageSkinAssets.head.src = data.customSkinHead;
@@ -1115,6 +1143,11 @@
     let phaseCooldownTimer = null;
     let appleMoveTick = 0;
     let bonusFood = null;
+    let extraApples = [];
+    let flavorTrails = [];
+    let appleStreak = 0;
+    let passiveGoldRemainder = 0;
+    let lastPassiveTickAt = Date.now();
     let nextAppleLocation = null;
     let phasePreviewUntil = 0;
     let applesEatenThisRun = 0;
@@ -1128,6 +1161,22 @@
     let cheatActive = false; // New state variable for cheat mode color
     let inputQueue = [];
     const INPUT_QUEUE_MAX = 3;
+
+    const KITCHEN_UPGRADES = {
+      betterSauce: { cost: 4000, title: 'Better Sauce' },
+      freshIngredients: { cost: 9000, title: 'Fresh Ingredients' },
+      fasterOvens: { cost: 15000, title: 'Faster Ovens' },
+      extraTables: { cost: 22000, title: 'Extra Tables' },
+      cleanerKitchen: { cost: 30000, title: 'Cleaner Kitchen' },
+      appleSupplier: { cost: 38000, title: 'Apple Supplier Contract' },
+      expandedDining: { cost: 48000, title: 'Expanded Dining Area' }
+    };
+
+    const APPLE_TIER_CONFIG = {
+      normal: { multiplier: 1, expiryMs: Infinity, color: null },
+      fresh: { multiplier: 1.35, expiryMs: 5500, color: '#7dff8a' },
+      premium: { multiplier: 1.85, expiryMs: 3600, color: '#ffe066' }
+    };
 
     function isOppositeDirection(a, b) {
       return a.x === -b.x && a.y === -b.y;
@@ -1156,6 +1205,94 @@
         if (snake[i].x === head.x && snake[i].y === head.y) return true;
       }
       return false;
+    }
+
+    function kitchenHas(key) {
+      return !!(data.kitchenUpgrades && data.kitchenUpgrades[key]);
+    }
+
+    function getPassiveGoldPerSecond() {
+      let base = 0;
+      if (kitchenHas('betterSauce')) base += 1;
+      if (kitchenHas('extraTables')) base += 2;
+      if (base <= 0) return 0;
+      const speedTickScale = kitchenHas('fasterOvens') ? 1.4 : 1;
+      return base * speedTickScale;
+    }
+
+    function getKitchenGoldMultiplier() {
+      return kitchenHas('cleanerKitchen') ? 1.25 : 1;
+    }
+
+    function getKitchenAppleCap() {
+      let cap = 2;
+      if (kitchenHas('extraTables')) cap += 1;
+      if (kitchenHas('appleSupplier')) cap += 1;
+      if (kitchenHas('expandedDining')) cap += 1;
+      return Math.min(5, cap);
+    }
+
+    function getKitchenSpawnIntervalMs() {
+      let ms = 4500;
+      if (kitchenHas('fasterOvens')) ms *= 0.72;
+      if (kitchenHas('extraTables')) ms *= 0.9;
+      if (kitchenHas('appleSupplier')) ms *= 0.78;
+      if (kitchenHas('expandedDining')) ms *= 0.82;
+      return Math.max(900, Math.floor(ms));
+    }
+
+    function getAppleTier() {
+      if (!kitchenHas('freshIngredients')) return 'normal';
+      const roll = Math.random();
+      if (roll < 0.18) return 'premium';
+      if (roll < 0.50) return 'fresh';
+      return 'normal';
+    }
+
+    function decorateApple(apple) {
+      if (!apple) return null;
+      apple.spawnedAt = Date.now();
+      apple.tier = getAppleTier();
+      apple.burnAt = kitchenHas('fasterOvens') ? Date.now() + 8500 : Infinity;
+      return apple;
+    }
+
+    function getAllApples() {
+      return [food, bonusFood, ...extraApples].filter(Boolean);
+    }
+
+    function applyPassiveGoldTick() {
+      const now = Date.now();
+      const elapsedSec = Math.max(0, (now - lastPassiveTickAt) / 1000);
+      lastPassiveTickAt = now;
+      const rate = getPassiveGoldPerSecond();
+      if (rate <= 0 || elapsedSec <= 0) return;
+      passiveGoldRemainder += rate * elapsedSec * getKitchenGoldMultiplier();
+      const whole = Math.floor(passiveGoldRemainder);
+      if (whole > 0) {
+        data.gems += whole;
+        passiveGoldRemainder -= whole;
+      }
+    }
+
+    function getKitchenGoldFromApple(apple, baseMultiplier = 1) {
+      const tier = APPLE_TIER_CONFIG[apple?.tier] || APPLE_TIER_CONFIG.normal;
+      const isExpired = Date.now() - (apple?.spawnedAt || 0) > tier.expiryMs;
+      const tierBonus = isExpired ? 1 : tier.multiplier;
+      const streakBonus = kitchenHas('freshIngredients') ? (1 + Math.min(0.75, appleStreak * 0.08)) : 1;
+      return baseMultiplier * tierBonus * streakBonus * getKitchenGoldMultiplier();
+    }
+
+    function buyKitchenUpgrade(type) {
+      const upgrade = KITCHEN_UPGRADES[type];
+      if (!upgrade) return;
+      if (kitchenHas(type)) return alert(upgrade.title + ' already unlocked');
+      if (data.gems < upgrade.cost) return alert('Not enough gold (' + upgrade.cost.toLocaleString() + ' needed)');
+      data.gems -= upgrade.cost;
+      data.kitchenUpgrades[type] = true;
+      registerPurchase();
+      save();
+      updateUI();
     }
 
     function getGoldAppleGoldMultiplier() {
@@ -1297,7 +1434,7 @@ function buyImpactSheddingUpgrade() {
   updateUI();
 }
 
-function applyAppleRewards(multiplier = 1, countAsApple = true) {
+function applyAppleRewards(multiplier = 1, countAsApple = true, goldScale = 1) {
     if (countAsApple) {
         applesEatenThisRun += multiplier;
         data.totalApplesEaten = (data.totalApplesEaten || 0) + multiplier;
@@ -1311,7 +1448,7 @@ function applyAppleRewards(multiplier = 1, countAsApple = true) {
     const phaseGoldScale = isPhasing && data.phaseExpertise ? 0 : (isPhasing && data.phaseGreed ? 1.75 : 1);
 
     data.exp += 25 * multiplier * totalXP * goldAppleXPBonus * phaseXPScale;
-    data.gems += Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale);
+    data.gems += Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale * goldScale);
     growCount += (data.evo + tEvo - 1) * multiplier;
 
     if ((data.echoGrowthLevel || 0) > 0 && countAsApple) {
@@ -1571,6 +1708,30 @@ if (boostEl) {
         setPhasePathVisibility('temporal-phase-slow-btn', phaseOrderUnlocked.temporalPhaseSlow);
         setPhasePathVisibility('immortal-phase-btn', phaseOrderUnlocked.immortalPhase);
 
+        Object.entries(KITCHEN_UPGRADES).forEach(([key, cfg]) => {
+            const idRoot = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+            const btn = document.getElementById(`kitchen-${idRoot}-btn`);
+            const desc = document.getElementById(`kitchen-${idRoot}-desc`);
+            if (!btn) return;
+            if (kitchenHas(key)) {
+                btn.innerHTML = `${cfg.title} <span class="btn-price">UNLOCKED</span>`;
+                btn.style.opacity = '0.6';
+            } else {
+                btn.innerHTML = `${cfg.title} <span class="btn-price">${cfg.cost.toLocaleString()} G</span>`;
+                btn.style.opacity = data.gems >= cfg.cost ? '1' : '0.75';
+            }
+            if (desc && key === 'freshIngredients') {
+                const streakMult = kitchenHas('freshIngredients') ? (1 + Math.min(0.75, appleStreak * 0.08)).toFixed(2) : '1.00';
+                desc.innerText = `Apples roll normal/fresh/premium tiers. Fresh & premium expire quickly. Current streak: ${appleStreak} (${streakMult}x gold).`;
+            }
+            if (desc && key === 'extraTables') {
+                desc.innerText = `More apples can exist at once (cap ${getKitchenAppleCap()}) and +2 passive gold/sec.`;
+            }
+            if (desc && key === 'cleanerKitchen') {
+                desc.innerText = `Global gold multiplier: ${getKitchenGoldMultiplier().toFixed(2)}x.`;
+            }
+        });
+
         updateSkinShopUI();
         updateAppleSkinShopUI();
         // Restore background color
@@ -1683,34 +1844,51 @@ function pickAppleSpot(exclude = []) {
 
     // Function to genfood a new apple position, ensuring it doesn't spawn on the snake
     function generateFood() {
-    food = pickAppleSpot();
+    food = decorateApple(pickAppleSpot());
     bonusFood = null;
+    extraApples = [];
 
     if (!food) return;
 
     const shouldSpawnDual = Math.random() * 100 < getDualAppleChance();
     if (shouldSpawnDual) {
-        bonusFood = pickAppleSpot([food]);
+        bonusFood = decorateApple(pickAppleSpot([food]));
     }
 
+    ensureApplePopulation();
     queueNextAppleLocation();
     apple_growth = apple_growth + 1
     }
 
     function respawnMainApple() {
-  const blocked = bonusFood ? [bonusFood] : [];
+  const blocked = [bonusFood, ...extraApples].filter(Boolean);
   if (data.phasePremonition && nextAppleLocation && !isSpotBlocked(nextAppleLocation, blocked)) {
-    food = { x: nextAppleLocation.x, y: nextAppleLocation.y };
+    food = decorateApple({ x: nextAppleLocation.x, y: nextAppleLocation.y });
   } else {
     const nextFood = pickAppleSpot(blocked);
-    if (nextFood) food = nextFood;
+    if (nextFood) food = decorateApple(nextFood);
   }
+  ensureApplePopulation();
   queueNextAppleLocation();
 }
 
 function respawnBonusApple() {
-  const nextBonus = pickAppleSpot(food ? [food] : []);
-  if (nextBonus) bonusFood = nextBonus;
+  const blocked = [food, ...extraApples].filter(Boolean);
+  const nextBonus = pickAppleSpot(blocked);
+  if (nextBonus) bonusFood = decorateApple(nextBonus);
+  ensureApplePopulation();
+}
+
+function ensureApplePopulation() {
+  const apples = getAllApples();
+  const targetCap = getKitchenAppleCap();
+  if (apples.length >= targetCap) return;
+  while (getAllApples().length < targetCap) {
+    const occupied = getAllApples();
+    const next = pickAppleSpot(occupied);
+    if (!next) break;
+    extraApples.push(decorateApple(next));
+  }
 }
 
 function getGoldAppleRenderColor(levelOffset = 0) {
@@ -1736,6 +1914,7 @@ function queueNextAppleLocation() {
   const exclude = [];
   if (food) exclude.push(food);
   if (bonusFood) exclude.push(bonusFood);
+  extraApples.forEach(a => exclude.push(a));
   const spots = getEmptyAppleSpots(exclude);
   if (spots.length === 0) {
     nextAppleLocation = null;
@@ -1868,6 +2047,7 @@ function resetPhasePremonitionPreview() {
 }
 
     function moveApple() {
+  const apples = getAllApples();
   const moveOneApple = (apple) => {
     if (!apple) return;
 
@@ -1887,16 +2067,14 @@ function resetPhasePremonitionPreview() {
     ny = (ny + 20) % 20;
 
     const onSnake = snake.some(s => s.x === nx && s.y === ny);
-    const hitsMain = food && apple !== food && food.x === nx && food.y === ny;
-    const hitsBonus = bonusFood && apple !== bonusFood && bonusFood.x === nx && bonusFood.y === ny;
-    if (onSnake || hitsMain || hitsBonus) return;
+    const hitsApple = apples.some(other => other && other !== apple && other.x === nx && other.y === ny);
+    if (onSnake || hitsApple) return;
 
     apple.x = nx;
     apple.y = ny;
   };
 
-  moveOneApple(food);
-  moveOneApple(bonusFood);
+  apples.forEach(moveOneApple);
 }
 
     function getTotalXPMultiplier() {
@@ -2810,7 +2988,8 @@ function reducePhaseCooldown(seconds) {
 }
 
 function getLoopDelay() {
-    const baseDelay = Math.max(25, data.spd - tSpd);
+    let baseDelay = Math.max(25, data.spd - tSpd);
+    if (kitchenHas('fasterOvens')) baseDelay = Math.max(20, Math.round(baseDelay * 0.92));
     if (isPhasing && data.temporalPhaseSlow) {
         return Math.round(baseDelay * 1.3);
     }
@@ -2844,7 +3023,8 @@ function getSoulHuskSpawn(collisionPoint) {
         : { x: snake[0].x, y: snake[0].y };
     const blocked = snake.some(s => s.x === candidate.x && s.y === candidate.y)
         || (food && food.x === candidate.x && food.y === candidate.y)
-        || (bonusFood && bonusFood.x === candidate.x && bonusFood.y === candidate.y);
+        || (bonusFood && bonusFood.x === candidate.x && bonusFood.y === candidate.y)
+        || extraApples.some(a => a && a.x === candidate.x && a.y === candidate.y);
     if (!blocked) return candidate;
     const fallbackSpots = getEmptyAppleSpots();
     if (fallbackSpots.length === 0) return null;
@@ -2861,6 +3041,7 @@ function createSoulHusk(collisionPoint, lostLength) {
     snake.forEach(s => blocked.add(`${s.x},${s.y}`));
     if (food) blocked.add(`${food.x},${food.y}`);
     if (bonusFood) blocked.add(`${bonusFood.x},${bonusFood.y}`);
+    extraApples.forEach(a => blocked.add(`${a.x},${a.y}`));
 
     const segments = [];
     const queue = [start];
@@ -3065,6 +3246,42 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
+    function updateFlavorTrails() {
+        const now = Date.now();
+        flavorTrails = flavorTrails.filter(trail => now < trail.expiresAt);
+    }
+
+    function trySpawnKitchenApple() {
+        const missing = getKitchenAppleCap() - getAllApples().length;
+        if (missing <= 0) return;
+        if (!kitchenHas('appleSupplier') && !kitchenHas('expandedDining') && !kitchenHas('extraTables')) return;
+        const chance = 0.35 + (kitchenHas('appleSupplier') ? 0.25 : 0) + (kitchenHas('expandedDining') ? 0.2 : 0);
+        if (Math.random() > chance) return;
+        const next = pickAppleSpot(getAllApples());
+        if (next) extraApples.push(decorateApple(next));
+    }
+
+    function processBurntApples() {
+        if (!kitchenHas('fasterOvens')) return;
+        const now = Date.now();
+        const burnPenalty = 12;
+        const burnCheck = (apple, onBurn) => {
+            if (!apple || !isFinite(apple.burnAt)) return;
+            if (now < apple.burnAt) return;
+            data.gems = Math.max(0, data.gems - burnPenalty);
+            onBurn();
+        };
+        burnCheck(food, () => respawnMainApple());
+        burnCheck(bonusFood, () => respawnBonusApple());
+        for (let i = extraApples.length - 1; i >= 0; i--) {
+            const apple = extraApples[i];
+            burnCheck(apple, () => {
+                extraApples.splice(i, 1);
+                ensureApplePopulation();
+            });
+        }
+    }
+
     function gameLoop() {
         
         if (endingActive) return;
@@ -3097,40 +3314,62 @@ window.addEventListener("keydown", (e) => {
         
         snake.unshift(head);
         // 🍎 Apple movement scaling with snake speed
-appleMoveTick++;
+        // Commented out per request: apples stay in place instead of wandering.
+// appleMoveTick++;
+//
+// // snake delay = Math.max(25, data.spd - tSpd)
+// // smaller delay = faster snake
+// const snakeDelay = getLoopDelay();
+//
+// // Convert snake speed into an apple tick rate
+// // Faster snake = apple moves more often
+// const speedFactor = (140 / snakeDelay); // 140 is your default-ish speed baseline
+//
+// // final apple move rate
+// const appleMoveRate = Math.max(
+//   2,
+//   Math.floor(APPLE_MOVE_BASE / (1 + speedFactor * APPLE_SCALE))
+// );
+//
+// if (appleMoveTick >= appleMoveRate) {
+//   appleMoveTick = 0;
+//   moveApple();
+// }
+        applyPassiveGoldTick();
+        updateFlavorTrails();
+        processBurntApples();
+        if (kitchenHas('appleSupplier') || kitchenHas('expandedDining') || kitchenHas('extraTables')) {
+            if (Date.now() % getKitchenSpawnIntervalMs() < getLoopDelay()) trySpawnKitchenApple();
+        }
 
-// snake delay = Math.max(25, data.spd - tSpd)
-// smaller delay = faster snake
-const snakeDelay = getLoopDelay();
+        const eatenTrailIdx = flavorTrails.findIndex(t => t.x === head.x && t.y === head.y);
+        if (eatenTrailIdx >= 0) {
+            data.gems += 6;
+            data.exp += 8;
+            flavorTrails.splice(eatenTrailIdx, 1);
+        }
 
-// Convert snake speed into an apple tick rate
-// Faster snake = apple moves more often
-const speedFactor = (140 / snakeDelay); // 140 is your default-ish speed baseline
-
-// final apple move rate
-const appleMoveRate = Math.max(
-  2,
-  Math.floor(APPLE_MOVE_BASE / (1 + speedFactor * APPLE_SCALE))
-);
-
-if (appleMoveTick >= appleMoveRate) {
-  appleMoveTick = 0;
-  moveApple();
-}
-        const ateMainApple = head.x === food.x && head.y === food.y;
+        const ateMainApple = food && head.x === food.x && head.y === food.y;
         const ateBonusApple = bonusFood && head.x === bonusFood.x && head.y === bonusFood.y;
+        const extraAppleIdx = extraApples.findIndex(a => head.x === a.x && head.y === a.y);
         if (soulHusk && soulHusk.segments && soulHusk.segments.some(seg => seg.x === head.x && seg.y === head.y)) {
             growCount += soulHusk.restoreLength;
             soulHusk = null;
         }
-        if (ateMainApple || ateBonusApple) {
+        if (ateMainApple || ateBonusApple || extraAppleIdx >= 0) {
+            const eatenApple = ateMainApple ? food : (ateBonusApple ? bonusFood : extraApples[extraAppleIdx]);
             // ✅ Clear death lore on first apple
   const box = document.getElementById("save-code-box");
   if (box && box.value && data.diedLastRun === false) {
     box.value = "... The memory fades...";
     setTimeout(() => box.value = "", 1200);
   }
-            applyAppleRewards(1, true);
+            appleStreak += 1;
+            const kitchenGoldScale = getKitchenGoldFromApple(eatenApple, 1);
+            applyAppleRewards(1, true, kitchenGoldScale);
+            if (kitchenHas('betterSauce')) {
+                flavorTrails.push({ x: eatenApple.x, y: eatenApple.y, expiresAt: Date.now() + 4500 });
+            }
             if ((data.sheddingLevel || 0) > 0) {
                 const profile = getSheddingProfile();
                 if (applesEatenThisRun % profile.apples === 0) {
@@ -3144,16 +3383,21 @@ if (appleMoveTick >= appleMoveRate) {
             if (data.exp >= data.nxt) { data.lvl++; data.sp++; data.xpM += 0.2; data.exp = 0; data.nxt *= 1.10; }
             if (ateMainApple) respawnMainApple();
             if (ateBonusApple) respawnBonusApple();
+            if (extraAppleIdx >= 0) {
+                extraApples.splice(extraAppleIdx, 1);
+                ensureApplePopulation();
+            }
             resetPhasePremonitionPreview();
             save(); updateUI();
         } 
         else {
+            if (kitchenHas('freshIngredients') && appleStreak > 0) appleStreak = 0;
             const cannibalismIdx = data.cannibalism
                 ? shedTailPieces.findIndex(seg => seg.x === head.x && seg.y === head.y)
                 : -1;
             if (cannibalismIdx >= 0) {
                 shedTailPieces.splice(cannibalismIdx, 1);
-                applyAppleRewards(2, true);
+                applyAppleRewards(2, true, getKitchenGoldMultiplier());
                 if (data.exp >= data.nxt) { data.lvl++; data.sp++; data.xpM += 0.2; data.exp = 0; data.nxt *= 1.10; }
                 save(); updateUI();
             } else if (growCount > 0) {
@@ -3167,22 +3411,34 @@ if (appleMoveTick >= appleMoveRate) {
         }
         
         drawPlayfieldBackground();
-        const primaryAppleColor = getGoldAppleRenderColor(0);
-        ctx.fillStyle = primaryAppleColor;
-        if (data.neonEnabled) {
-            ctx.shadowColor = primaryAppleColor;
-            ctx.shadowBlur = 10;
-        } else {
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-        }
-        if (food) ctx.fillRect(food.x*grid+2, food.y*grid+2, grid-4, grid-4);
-        if (bonusFood) {
-            const bonusAppleColor = getGoldAppleRenderColor(1);
-            ctx.fillStyle = bonusAppleColor;
-            if (data.neonEnabled) ctx.shadowColor = bonusAppleColor;
-            ctx.fillRect(bonusFood.x*grid+2, bonusFood.y*grid+2, grid-4, grid-4);
-        }
+        const drawApple = (apple, levelOffset = 0) => {
+            if (!apple) return;
+            const tierCfg = APPLE_TIER_CONFIG[apple.tier] || APPLE_TIER_CONFIG.normal;
+            const color = tierCfg.color || getGoldAppleRenderColor(levelOffset);
+            ctx.fillStyle = color;
+            if (data.neonEnabled) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 10;
+            }
+            ctx.fillRect(apple.x*grid+2, apple.y*grid+2, grid-4, grid-4);
+            if (kitchenHas('fasterOvens') && isFinite(apple.burnAt)) {
+                const remain = Math.max(0, apple.burnAt - Date.now());
+                if (remain < 2600) {
+                    ctx.strokeStyle = 'rgba(255,120,80,0.95)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(apple.x*grid+2, apple.y*grid+2, grid-4, grid-4);
+                }
+            }
+        };
+
+        flavorTrails.forEach(trail => {
+            ctx.fillStyle = 'rgba(255, 204, 120, 0.35)';
+            ctx.fillRect(trail.x*grid+6, trail.y*grid+6, grid-12, grid-12);
+        });
+
+        drawApple(food, 0);
+        drawApple(bonusFood, 1);
+        extraApples.forEach((apple, idx) => drawApple(apple, 1 + idx));
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
         if (soulHusk && soulHusk.segments) {
@@ -3323,6 +3579,11 @@ function init() {
     runXPBoostBought = 0;
     runXPBoostApple = 0;
     applesEatenThisRun = 0;
+    appleStreak = 0;
+    flavorTrails = [];
+    extraApples = [];
+    passiveGoldRemainder = 0;
+    lastPassiveTickAt = Date.now();
     shedTailPieces = [];
     soulAnchorUsedThisRun = false;
     soulAnchorPauseUntil = 0;
