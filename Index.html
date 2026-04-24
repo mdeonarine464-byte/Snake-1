@@ -708,7 +708,32 @@
             <div id="phase-status" style="font-size:0.7em; color:var(--soul); margin-top:5px; display:none;">PHASE: READY</div>
         </div>
 
-        <div class="panel" id="minimap-panel" style="border-left:4px solid var(--gold); min-height:160px;"></div>
+        <div class="panel" id="minimap-panel" style="border-left:4px solid var(--gold); min-height:160px;">
+            <span class="stat-label">Minimap</span>
+            <div style="margin-top:8px; display:grid; gap:6px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Kitchen</span><span style="color:var(--gold);">0%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Animatronics</span><span style="color:var(--gold);">0%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Arcade</span><span style="color:var(--gold);">0%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Snakelocks</span><span style="color:var(--gold);">0%</span></div>
+            </div>
+        </div>
+
+        <div id="snazzeria-panel" style="margin-top:6px;">
+            <button class="panel accordion stat-val" style="color:var(--gold); border-left:4px solid var(--gold); border-radius:12px 12px 0 0; margin-bottom:0;">Snazzeria</button>
+            <div class="panel-content" style="border-left:4px solid var(--gold); border-radius:0 0 12px 12px; padding:8px; margin-top:0;">
+                <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Kitchen</button>
+                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Kitchen details.</div>
+
+                <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Animatronics</button>
+                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Animatronics details.</div>
+
+                <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Arcade</button>
+                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Arcade details.</div>
+
+                <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Snakelocks</button>
+                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px;">Snakelocks details.</div>
+            </div>
+        </div>
 
         <div id="permanent-skills-panel">
             <button class="panel accordion stat-val" style="color:var(--xp); border-left:4px solid var(--xp); border-radius:12px 12px 0 0; margin-bottom:0;">Permanent Skills</button>
