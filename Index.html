@@ -256,6 +256,18 @@
   text-transform: none;
   font-size: 0.72em;
 }
+.minimap-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78em;
+  margin-top: 6px;
+  color: #d8d8d8;
+}
+.minimap-stat-row strong {
+  color: var(--premium);
+  font-weight: 600;
+}
 .modal {
     position: fixed;
     inset: 0;
@@ -737,6 +749,37 @@
 </div>
 
     <div class="sidebar">
+        <div class="panel" style="border-left:4px solid var(--premium);">
+            <span class="stat-label">Minimap</span>
+            <div class="minimap-stat-row"><span>Kitchen</span><strong>0%</strong></div>
+            <div class="minimap-stat-row"><span>Animatronics</span><strong>0%</strong></div>
+            <div class="minimap-stat-row"><span>Arcade</span><strong>0%</strong></div>
+            <div class="minimap-stat-row"><span>Snakelocks</span><strong>0%</strong></div>
+        </div>
+
+        <button class="panel accordion stat-val" style="color:var(--premium); border-left:4px solid var(--premium); border-radius:12px 12px 0 0; margin-bottom:0;">Snazzeria</button>
+        <div class="panel-content" style="border-left:4px solid var(--premium); border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
+            <button class="panel accordion stat-val" style="color:var(--premium); border-left:4px solid var(--premium); border-radius:8px; margin-bottom:6px;">Kitchen</button>
+            <div class="panel-content" style="border-left:4px solid var(--premium); border-radius:0 0 8px 8px; padding:8px 10px; margin:-6px 0 8px 0;">
+                <span class="stat-label" style="text-transform:none;">Kitchen systems overview.</span>
+            </div>
+
+            <button class="panel accordion stat-val" style="color:var(--premium); border-left:4px solid var(--premium); border-radius:8px; margin-bottom:6px;">Animatronics</button>
+            <div class="panel-content" style="border-left:4px solid var(--premium); border-radius:0 0 8px 8px; padding:8px 10px; margin:-6px 0 8px 0;">
+                <span class="stat-label" style="text-transform:none;">Animatronics status panel.</span>
+            </div>
+
+            <button class="panel accordion stat-val" style="color:var(--premium); border-left:4px solid var(--premium); border-radius:8px; margin-bottom:6px;">Arcade</button>
+            <div class="panel-content" style="border-left:4px solid var(--premium); border-radius:0 0 8px 8px; padding:8px 10px; margin:-6px 0 8px 0;">
+                <span class="stat-label" style="text-transform:none;">Arcade diagnostics.</span>
+            </div>
+
+            <button class="panel accordion stat-val" style="color:var(--premium); border-left:4px solid var(--premium); border-radius:8px; margin-bottom:0;">Snakelocks</button>
+            <div class="panel-content" style="border-left:4px solid var(--premium); border-radius:0 0 8px 8px; padding:8px 10px; margin:-6px 0 0 0;">
+                <span class="stat-label" style="text-transform:none;">Snakelocks access control.</span>
+            </div>
+        </div>
+
         <div id="shop-tabs" style="display:flex; gap:5px; margin-bottom:8px;">
             <button class="tab-btn active" onclick="switchShopTab('main')">MAIN SHOP</button>
             <button class="tab-btn" onclick="switchShopTab('black')">BLACK MARKET</button>
