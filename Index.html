@@ -727,7 +727,7 @@
                     <button id="kitchen-btn-betterSauce" class="classic-btn" onclick="buyKitchenUpgrade('betterSauce')">
                         <span>
                             <span style="font-weight:bold;">Better Sauce</span><br>
-                            <span style="font-size:0.8em; color:#aaa;">+1 passive gold/sec · Apples leave flavor trails for bonus gold<br>"Customers keep coming back…"</span>
+                            <span style="font-size:0.8em; color:#aaa;">+1 passive gold/sec · Apples leave a 3-tile trail (+1G each) · "Customers keep coming back…"</span>
                         </span>
                         <span class="btn-price">75G</span>
                     </button>
@@ -769,7 +769,7 @@
                     <button id="kitchen-btn-expandedDining" class="classic-btn" onclick="buyKitchenUpgrade('expandedDining')">
                         <span>
                             <span style="font-weight:bold;">Expanded Dining Area</span><br>
-                            <span style="font-size:0.8em; color:#aaa;">+1 extra apple slot · Apples stop moving</span>
+                            <span style="font-size:0.8em; color:#aaa;">+1 extra apple slot · More apples on board</span>
                         </span>
                         <span class="btn-price">400G</span>
                     </button>
@@ -1429,6 +1429,17 @@ function collectFlavorTrail(x, y) {
     }
 }
 
+function createFlavorTrail(appleX, appleY) {
+    const expiresAt = Date.now() + 5000;
+    for (let i = 1; i <= 3; i++) {
+        const tx = ((appleX - dx * i) % 20 + 20) % 20;
+        const ty = ((appleY - dy * i) % 20 + 20) % 20;
+        if (!flavorTrails.some(t => t.x === tx && t.y === ty)) {
+            flavorTrails.push({ x: tx, y: ty, expiresAt });
+        }
+    }
+}
+
 function getAppleQualityBonus(apple) {
     if (!data.kitchenFreshIngredients || !apple || !apple.spawnTime) return 0;
     const age = Date.now() - apple.spawnTime;
@@ -1519,9 +1530,9 @@ function applyAppleRewards(multiplier = 1, countAsApple = true, apple = null) {
             lastAppleEatTime = now;
         }
 
-        // Better Sauce: leave flavor trail at eaten apple's position
+        // Better Sauce: emit 3-tile trail away from snake's heading direction
         if (data.kitchenBetterSauce && apple) {
-            flavorTrails.push({ x: apple.x, y: apple.y, expiresAt: Date.now() + 5000 });
+            createFlavorTrail(apple.x, apple.y);
         }
     }
     runXPBoostApple += 0.05 * multiplier;
@@ -3350,20 +3361,7 @@ window.addEventListener("keydown", (e) => {
             lastAppleEatTime = 0;
         }
 
-        // 🍎 Apple movement scaling with snake speed (disabled by Expanded Dining Area)
-        if (!data.kitchenExpandedDining) {
-appleMoveTick++;
-const snakeDelay = getLoopDelay();
-const speedFactor = (140 / snakeDelay);
-const appleMoveRate = Math.max(
-  2,
-  Math.floor(APPLE_MOVE_BASE / (1 + speedFactor * APPLE_SCALE))
-);
-if (appleMoveTick >= appleMoveRate) {
-  appleMoveTick = 0;
-  moveApple();
-}
-        }
+        // 🍎 Apple movement is disabled
 
         const ateMainApple = head.x === food.x && head.y === food.y;
         const ateBonusApple = bonusFood && head.x === bonusFood.x && head.y === bonusFood.y;
