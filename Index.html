@@ -1432,8 +1432,8 @@ function collectFlavorTrail(x, y) {
 function createFlavorTrail(appleX, appleY) {
     const expiresAt = Date.now() + 5000;
     for (let i = 1; i <= 3; i++) {
-        const tx = ((appleX - dx * i) % 20 + 20) % 20;
-        const ty = ((appleY - dy * i) % 20 + 20) % 20;
+        const tx = ((appleX + dx * i) % 20 + 20) % 20;
+        const ty = ((appleY + dy * i) % 20 + 20) % 20;
         if (!flavorTrails.some(t => t.x === tx && t.y === ty)) {
             flavorTrails.push({ x: tx, y: ty, expiresAt });
         }
