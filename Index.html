@@ -712,7 +712,7 @@
             <span class="stat-label">Minimap</span>
             <div style="margin-top:8px; display:grid; gap:6px;">
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Kitchen</span><span id="minimap-kitchen-pct" style="color:var(--gold);">0%</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Animatronics</span><span style="color:var(--gold);">0%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Animatronics</span><span id="minimap-anim-pct" style="color:var(--gold);">0%</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Arcade</span><span style="color:var(--gold);">0%</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Snakelocks</span><span style="color:var(--gold);">0%</span></div>
             </div>
@@ -776,7 +776,30 @@
                 </div>
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Animatronics</button>
-                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Animatronics details.</div>
+                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">
+                    <button id="anim-btn-animatronics" class="classic-btn" onclick="buyAnimatronicsUpgrade('animatronics')">
+                        <span>
+                            <span style="font-weight:bold;">Animatronics</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">×5 gold multiplier on all apple rewards · +2 passive gold/sec</span>
+                        </span>
+                        <span class="btn-price">500G</span>
+                    </button>
+                    <button id="anim-btn-servos" class="classic-btn" onclick="buyAnimatronicsUpgrade('servos')">
+                        <span>
+                            <span style="font-weight:bold;">Improved Servos</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Animatronics income → +8/sec · Slight speed boost · Dash [SHIFT]: costs 2 length, 3s cooldown</span>
+                        </span>
+                        <span class="btn-price">750G</span>
+                    </button>
+                    <div id="anim-dash-status" style="display:none; font-size:0.75em; color:var(--xp); text-align:center; margin:-4px 0 6px;"></div>
+                    <button id="anim-btn-aiV1" class="classic-btn" onclick="buyAnimatronicsUpgrade('aiV1')">
+                        <span>
+                            <span style="font-weight:bold;">Animatronic AI v1</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">One <span style="color:#ff6200;">moving target</span> apple per run · Eating it spawns 2 bonus apples · Gives 3× gold</span>
+                        </span>
+                        <span class="btn-price">1000G</span>
+                    </button>
+                </div>
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Arcade</button>
                 <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Arcade details.</div>
@@ -1037,7 +1060,10 @@
         kitchenExtraTables: false,
         kitchenCleanerKitchen: false,
         kitchenAppleSupplier: false,
-        kitchenExpandedDining: false
+        kitchenExpandedDining: false,
+        animatronicsUnlocked: false,
+        animatronicsServos: false,
+        animatronicsAI: false
     };
     let data = Object.assign({}, defaultSaveData, JSON.parse(localStorage.getItem('Snake_2026_SoulReveal')) || {});
     if (!Array.isArray(data.owned)) data.owned = ['#00fbff'];
@@ -1182,6 +1208,12 @@
     let flavorTrails = [];
     let passiveGoldInterval = null;
     let gameLoopPauseStart = 0;
+    let dashTicks = 0;
+    let dashCooldownEnd = 0;
+    let aiApple = null;
+    let aiAppleEaten = false;
+    let aiBonusFood1 = null;
+    let aiBonusFood2 = null;
     let phasePreviewUntil = 0;
     let applesEatenThisRun = 0;
     let shedTailPieces = [];
@@ -1389,6 +1421,7 @@ function getPassiveGoldPerSec() {
     let base = 0;
     if (data.kitchenBetterSauce) base += 1;
     if (data.kitchenExtraTables) base += 2;
+    if (data.animatronicsUnlocked) base += data.animatronicsServos ? 8 : 2;
     if (base > 0 && data.kitchenCleanerKitchen) base = Math.ceil(base * 1.5);
     return base;
 }
@@ -1415,7 +1448,7 @@ function getFreshSpawnTime() {
 }
 
 function spawnExtraApple(slot) {
-    const excluded = [food, bonusFood, extraFood1, extraFood2, supplierFood].filter(Boolean);
+    const excluded = [food, bonusFood, extraFood1, extraFood2, supplierFood, aiApple, aiBonusFood1, aiBonusFood2].filter(Boolean);
     const spot = pickAppleSpot(excluded);
     if (!spot) return;
     const apple = { x: spot.x, y: spot.y, spawnTime: getFreshSpawnTime() };
@@ -1528,6 +1561,72 @@ function buyKitchenUpgrade(type) {
 
 // ─── End Kitchen Upgrade System ───────────────────────────────────────────────
 
+// ─── Animatronic Upgrade System ───────────────────────────────────────────────
+
+const ANIM_COSTS = { animatronics: 500, servos: 750, aiV1: 1000 };
+const ANIM_KEYS  = { animatronics: 'animatronicsUnlocked', servos: 'animatronicsServos', aiV1: 'animatronicsAI' };
+
+function updateAnimatronicsUI() {
+    const keys = Object.values(ANIM_KEYS);
+    const pct = Math.round(keys.filter(k => data[k]).length / keys.length * 100);
+    const el = document.getElementById('minimap-anim-pct');
+    if (el) el.textContent = pct + '%';
+
+    Object.entries(ANIM_COSTS).forEach(([type, cost]) => {
+        const btn = document.getElementById('anim-btn-' + type);
+        if (!btn) return;
+        const owned = data[ANIM_KEYS[type]];
+        btn.classList.toggle('locked-choice', owned);
+        const priceEl = btn.querySelector('.btn-price');
+        if (priceEl) priceEl.textContent = owned ? 'OWNED' : cost + 'G';
+    });
+
+    const dashEl = document.getElementById('anim-dash-status');
+    if (dashEl) {
+        if (data.animatronicsServos) {
+            dashEl.style.display = 'block';
+            const cdLeft = Math.max(0, Math.ceil((dashCooldownEnd - Date.now()) / 1000));
+            dashEl.textContent = dashTicks > 0 ? 'DASHING!' : cdLeft > 0 ? 'Dash CD: ' + cdLeft + 's' : 'Dash ready [SHIFT]';
+        } else {
+            dashEl.style.display = 'none';
+        }
+    }
+}
+
+function triggerDash() {
+    if (!data.animatronicsServos) return;
+    if (dashTicks > 0 || Date.now() < dashCooldownEnd) return;
+    if (snake.length <= 4 || isPaused || endingActive || titleActive) return;
+    if (snake.length > 2) snake.pop();
+    if (snake.length > 2) snake.pop();
+    dashTicks = 6;
+    dashCooldownEnd = Date.now() + 3000;
+}
+
+function spawnAiApple() {
+    const excluded = [food, bonusFood, extraFood1, extraFood2, supplierFood, aiBonusFood1, aiBonusFood2].filter(Boolean);
+    const spot = pickAppleSpot(excluded);
+    if (spot) aiApple = { x: spot.x, y: spot.y };
+}
+
+function buyAnimatronicsUpgrade(type) {
+    const dataKey = ANIM_KEYS[type];
+    if (!dataKey || data[dataKey]) return;
+    if (type === 'servos' && !data.animatronicsUnlocked) { alert('Requires Animatronics'); return; }
+    if (type === 'aiV1'  && !data.animatronicsServos)    { alert('Requires Improved Servos'); return; }
+    const cost = ANIM_COSTS[type];
+    if (data.gems < cost) { alert('Not enough Gold (' + cost + 'G needed)'); return; }
+    data.gems -= cost;
+    data[dataKey] = true;
+    if (type === 'aiV1' && food) spawnAiApple();
+    startPassiveGoldTick();
+    save();
+    updateUI();
+    updateAnimatronicsUI();
+}
+
+// ─── End Animatronic Upgrade System ───────────────────────────────────────────
+
 function applyAppleRewards(multiplier = 1, countAsApple = true, apple = null) {
     if (countAsApple) {
         applesEatenThisRun += multiplier;
@@ -1555,16 +1654,13 @@ function applyAppleRewards(multiplier = 1, countAsApple = true, apple = null) {
     const phaseGoldScale = isPhasing && data.phaseExpertise ? 0 : (isPhasing && data.phaseGreed ? 1.75 : 1);
 
     // Fresh Ingredients: streak multiplier (+10% gold per streak, max +100% at 10)
-    const streakMult = data.kitchenFreshIngredients ? (1 + Math.min(10, appleStreak) * 0.1) : 1;
-
-    // Fresh Ingredients: quality bonus flat gold
-    const qualityBonus = getAppleQualityBonus(apple) * multiplier;
-
-    // Faster Ovens: burnt apple penalty
-    const burnPenalty = isAppleBurnt(apple) ? 5 : 0;
+    const streakMult       = data.kitchenFreshIngredients ? (1 + Math.min(10, appleStreak) * 0.1) : 1;
+    const animatronicsMult = data.animatronicsUnlocked ? 5 : 1;
+    const qualityBonus     = getAppleQualityBonus(apple) * multiplier;
+    const burnPenalty      = isAppleBurnt(apple) ? 5 : 0;
 
     data.exp += 25 * multiplier * totalXP * goldAppleXPBonus * phaseXPScale;
-    const baseGold = Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale * streakMult) + qualityBonus;
+    const baseGold = Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale * streakMult * animatronicsMult) + qualityBonus;
     data.gems += Math.max(0, baseGold - burnPenalty);
     growCount += (data.evo + tEvo - 1) * multiplier;
 
@@ -1892,6 +1988,7 @@ soulButtons.forEach(btn => {
         });
     updatePhaseUI();
     updateKitchenUI();
+    updateAnimatronicsUI();
     }
     let apple_growth = 0
 
@@ -1962,7 +2059,7 @@ function pickAppleSpot(exclude = []) {
     }
 
     function respawnMainApple() {
-  const blocked = [bonusFood, extraFood1, extraFood2, supplierFood].filter(Boolean);
+  const blocked = [bonusFood, extraFood1, extraFood2, supplierFood, aiApple, aiBonusFood1, aiBonusFood2].filter(Boolean);
   if (data.phasePremonition && nextAppleLocation && !isSpotBlocked(nextAppleLocation, blocked)) {
     food = { x: nextAppleLocation.x, y: nextAppleLocation.y, spawnTime: getFreshSpawnTime() };
   } else {
@@ -1973,7 +2070,7 @@ function pickAppleSpot(exclude = []) {
 }
 
 function respawnBonusApple() {
-  const excluded = [food, extraFood1, extraFood2, supplierFood].filter(Boolean);
+  const excluded = [food, extraFood1, extraFood2, supplierFood, aiApple, aiBonusFood1, aiBonusFood2].filter(Boolean);
   const nextBonus = pickAppleSpot(excluded);
   if (nextBonus) bonusFood = { x: nextBonus.x, y: nextBonus.y, spawnTime: getFreshSpawnTime() };
 }
@@ -3075,11 +3172,11 @@ function reducePhaseCooldown(seconds) {
 }
 
 function getLoopDelay() {
+    if (dashTicks > 0) return 15;
     let baseDelay = Math.max(25, data.spd - tSpd);
-    if (data.kitchenFasterOvens) baseDelay = Math.max(25, baseDelay - 8);
-    if (isPhasing && data.temporalPhaseSlow) {
-        return Math.round(baseDelay * 1.3);
-    }
+    if (data.kitchenFasterOvens)    baseDelay = Math.max(25, baseDelay - 8);
+    if (data.animatronicsServos)    baseDelay = Math.max(25, baseDelay - 5);
+    if (isPhasing && data.temporalPhaseSlow) return Math.round(baseDelay * 1.3);
     return baseDelay;
 }
 
@@ -3342,7 +3439,7 @@ window.addEventListener("keydown", (e) => {
         if (gameLoopPauseStart) {
             const pausedMs = Date.now() - gameLoopPauseStart;
             const extendApple = a => { if (a && a.spawnTime) a.spawnTime += pausedMs; };
-            extendApple(food); extendApple(bonusFood); extendApple(extraFood1); extendApple(extraFood2); extendApple(supplierFood);
+            extendApple(food); extendApple(bonusFood); extendApple(extraFood1); extendApple(extraFood2); extendApple(supplierFood); extendApple(aiBonusFood1); extendApple(aiBonusFood2);
             gameLoopPauseStart = 0;
         }
         if (Date.now() < soulAnchorPauseUntil) { setTimeout(gameLoop, 50); return; }
@@ -3383,26 +3480,58 @@ window.addEventListener("keydown", (e) => {
             lastAppleEatTime = 0;
         }
 
-        // 🍎 Apple movement is disabled
+        // Dash: decrement active dash ticks
+        if (dashTicks > 0) dashTicks--;
 
-        const ateMainApple = head.x === food.x && head.y === food.y;
-        const ateBonusApple = bonusFood && head.x === bonusFood.x && head.y === bonusFood.y;
-        const ateExtraApple1 = extraFood1 && head.x === extraFood1.x && head.y === extraFood1.y;
-        const ateExtraApple2 = extraFood2 && head.x === extraFood2.x && head.y === extraFood2.y;
+        // Animatronic AI: move the special apple every game tick
+        if (aiApple && !aiAppleEaten) {
+            const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+            const d = dirs[Math.floor(Math.random() * 4)];
+            const nx = (aiApple.x + d.x + 20) % 20;
+            const ny = (aiApple.y + d.y + 20) % 20;
+            const allOthers = [food, bonusFood, extraFood1, extraFood2, supplierFood, aiBonusFood1, aiBonusFood2].filter(Boolean);
+            const blocked = snake.some(s => s.x === nx && s.y === ny) || allOthers.some(a => a.x === nx && a.y === ny);
+            if (!blocked) { aiApple.x = nx; aiApple.y = ny; }
+        }
+
+        // 🍎 Regular apple movement is disabled
+
+        const ateMainApple    = head.x === food.x && head.y === food.y;
+        const ateBonusApple   = bonusFood    && head.x === bonusFood.x    && head.y === bonusFood.y;
+        const ateExtraApple1  = extraFood1   && head.x === extraFood1.x   && head.y === extraFood1.y;
+        const ateExtraApple2  = extraFood2   && head.x === extraFood2.x   && head.y === extraFood2.y;
         const ateSupplierApple = supplierFood && head.x === supplierFood.x && head.y === supplierFood.y;
+        const ateAiApple      = aiApple && !aiAppleEaten && head.x === aiApple.x && head.y === aiApple.y;
+        const ateAiBonus1     = aiBonusFood1 && head.x === aiBonusFood1.x && head.y === aiBonusFood1.y;
+        const ateAiBonus2     = aiBonusFood2 && head.x === aiBonusFood2.x && head.y === aiBonusFood2.y;
+
         if (soulHusk && soulHusk.segments && soulHusk.segments.some(seg => seg.x === head.x && seg.y === head.y)) {
             growCount += soulHusk.restoreLength;
             soulHusk = null;
         }
-        if (ateMainApple || ateBonusApple || ateExtraApple1 || ateExtraApple2 || ateSupplierApple) {
+        if (ateMainApple || ateBonusApple || ateExtraApple1 || ateExtraApple2 || ateSupplierApple || ateAiApple || ateAiBonus1 || ateAiBonus2) {
             // ✅ Clear death lore on first apple
   const box = document.getElementById("save-code-box");
   if (box && box.value && data.diedLastRun === false) {
     box.value = "... The memory fades...";
     setTimeout(() => box.value = "", 1200);
   }
-            const eatenApple = ateMainApple ? food : ateBonusApple ? bonusFood : ateExtraApple1 ? extraFood1 : ateExtraApple2 ? extraFood2 : supplierFood;
-            applyAppleRewards(1, true, eatenApple);
+            const eatenApple = ateMainApple ? food : ateBonusApple ? bonusFood : ateExtraApple1 ? extraFood1 : ateExtraApple2 ? extraFood2 : ateSupplierApple ? supplierFood : ateAiApple ? aiApple : ateAiBonus1 ? aiBonusFood1 : aiBonusFood2;
+            const rewardMult = ateAiApple ? 3 : 1;
+            applyAppleRewards(rewardMult, true, eatenApple);
+
+            if (ateAiApple) {
+                aiAppleEaten = true;
+                // Spawn 2 bonus apples
+                const excl = [food, bonusFood, extraFood1, extraFood2, supplierFood].filter(Boolean);
+                const b1 = pickAppleSpot(excl);
+                if (b1) { aiBonusFood1 = { x: b1.x, y: b1.y, spawnTime: getFreshSpawnTime() }; excl.push(aiBonusFood1); }
+                const b2 = pickAppleSpot(excl);
+                if (b2) aiBonusFood2 = { x: b2.x, y: b2.y, spawnTime: getFreshSpawnTime() };
+            }
+            if (ateAiBonus1) { const s = pickAppleSpot([food,bonusFood,extraFood1,extraFood2,supplierFood,aiApple,aiBonusFood2].filter(Boolean)); aiBonusFood1 = s ? {x:s.x,y:s.y,spawnTime:getFreshSpawnTime()} : null; }
+            if (ateAiBonus2) { const s = pickAppleSpot([food,bonusFood,extraFood1,extraFood2,supplierFood,aiApple,aiBonusFood1].filter(Boolean)); aiBonusFood2 = s ? {x:s.x,y:s.y,spawnTime:getFreshSpawnTime()} : null; }
+
             if ((data.sheddingLevel || 0) > 0) {
                 const profile = getSheddingProfile();
                 if (applesEatenThisRun % profile.apples === 0) {
@@ -3414,13 +3543,13 @@ window.addEventListener("keydown", (e) => {
             }
 
             if (data.exp >= data.nxt) { data.lvl++; data.sp++; data.xpM += 0.2; data.exp = 0; data.nxt *= 1.10; }
-            if (ateMainApple) respawnMainApple();
-            if (ateBonusApple) respawnBonusApple();
+            if (ateMainApple)   respawnMainApple();
+            if (ateBonusApple)  respawnBonusApple();
             if (ateExtraApple1) spawnExtraApple(1);
             if (ateExtraApple2) spawnExtraApple(2);
             if (ateSupplierApple) spawnExtraApple(3);
             resetPhasePremonitionPreview();
-            save(); updateUI(); updateKitchenUI();
+            save(); updateUI(); updateKitchenUI(); updateAnimatronicsUI();
         }
         else {
             const cannibalismIdx = data.cannibalism
@@ -3478,6 +3607,19 @@ window.addEventListener("keydown", (e) => {
         drawApple(extraFood1, 0);
         drawApple(extraFood2, 1);
         drawApple(supplierFood, 0);
+        drawApple(aiBonusFood1, 0);
+        drawApple(aiBonusFood2, 1);
+        // AI moving-target apple: bright orange-red with pulsing border
+        if (aiApple && !aiAppleEaten) {
+            const pulse = Math.floor(Date.now() / 150) % 2 === 0;
+            ctx.fillStyle = '#ff6200';
+            if (data.neonEnabled) { ctx.shadowColor = '#ff6200'; ctx.shadowBlur = 14; }
+            ctx.fillRect(aiApple.x * grid + 2, aiApple.y * grid + 2, grid - 4, grid - 4);
+            ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = pulse ? '#ffffff' : '#ffaa44';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(aiApple.x * grid + 2, aiApple.y * grid + 2, grid - 4, grid - 4);
+        }
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
         if (soulHusk && soulHusk.segments) {
@@ -3571,6 +3713,7 @@ window.addEventListener("keydown", (e) => {
         if (key === controls.down) tryQuickTurn({x:0, y:1});
 
         if (isPhaseTriggerKey(e)) triggerPhase();
+        if (key === 'shift') triggerDash();
         if(key==='r') resetGame();
         if(key==='t') returnToTitle();
         
@@ -3656,8 +3799,12 @@ if (data.diedLastRun) {
     dy = 0;
     inputQueue = [];
     generateFood();
+    // Animatronic AI: spawn once-per-run moving target
+    aiApple = null; aiAppleEaten = false; aiBonusFood1 = null; aiBonusFood2 = null;
+    dashTicks = 0; dashCooldownEnd = 0;
+    if (data.animatronicsAI && food) spawnAiApple();
 }
-    
+
     // Cookie Clicker style encoding (Base64)
 function exportSave() {
     const saveString = btoa(JSON.stringify(data)); // Converts game object to Base64 symbols
