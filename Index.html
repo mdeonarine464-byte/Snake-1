@@ -734,7 +734,7 @@
                     <button id="kitchen-btn-freshIngredients" class="classic-btn" onclick="buyKitchenUpgrade('freshIngredients')">
                         <span>
                             <span style="font-weight:bold;">Fresh Ingredients</span><br>
-                            <span style="font-size:0.8em; color:#aaa;">Apple quality tiers (normal/fresh/premium) · Consecutive streak multiplier · Missing one resets streak</span>
+                            <span style="font-size:0.8em; color:#aaa;">Apples spawn as <span style="color:#aaa;">normal</span> / <span style="color:#88ff88;">fresh</span> / <span style="color:#ffe566;">premium</span> · Streak multiplier · Missing resets streak</span>
                         </span>
                         <span class="btn-price">150G</span>
                     </button>
@@ -762,7 +762,7 @@
                     <button id="kitchen-btn-appleSupplier" class="classic-btn" onclick="buyKitchenUpgrade('appleSupplier')">
                         <span>
                             <span style="font-weight:bold;">Apple Supplier Contract</span><br>
-                            <span style="font-size:0.8em; color:#aaa;">+40% dual apple spawn chance · More apples on board</span>
+                            <span style="font-size:0.8em; color:#aaa;">+1 apple permanently on board</span>
                         </span>
                         <span class="btn-price">200G</span>
                     </button>
@@ -1175,11 +1175,13 @@
     let bonusFood = null;
     let extraFood1 = null;
     let extraFood2 = null;
+    let supplierFood = null;
     let nextAppleLocation = null;
     let appleStreak = 0;
     let lastAppleEatTime = 0;
     let flavorTrails = [];
     let passiveGoldInterval = null;
+    let gameLoopPauseStart = 0;
     let phasePreviewUntil = 0;
     let applesEatenThisRun = 0;
     let shedTailPieces = [];
@@ -1236,9 +1238,7 @@ function getEchoGrowthBonus() {
 }
 
 function getDualAppleChance() {
-    const base = Math.min(55, (data.dualAppleLevel || 0) * 11);
-    if (data.kitchenAppleSupplier) return Math.min(100, base + 40);
-    return base;
+    return Math.min(55, (data.dualAppleLevel || 0) * 11);
 }
 
 function getGoldAppleCost() {
@@ -1398,7 +1398,7 @@ function startPassiveGoldTick() {
     const intervalMs = data.kitchenFasterOvens ? 700 : 1000;
     passiveGoldInterval = setInterval(() => {
         const rate = getPassiveGoldPerSec();
-        if (rate > 0 && !isPaused && !titleActive && !endingActive) {
+        if (rate > 0 && !titleActive && !endingActive) {
             data.gems += rate;
             const el = document.getElementById('gem-count');
             if (el) el.innerText = data.gems.toLocaleString();
@@ -1406,12 +1406,22 @@ function startPassiveGoldTick() {
     }, intervalMs);
 }
 
+function getFreshSpawnTime() {
+    if (!data.kitchenFreshIngredients) return Date.now();
+    const tier = Math.floor(Math.random() * 3);
+    if (tier === 0) return Date.now();          // premium  (<2s)
+    if (tier === 1) return Date.now() - 2500;   // fresh    (2–4s)
+    return Date.now() - 4500;                   // normal   (>4s)
+}
+
 function spawnExtraApple(slot) {
-    const excluded = [food, bonusFood, extraFood1, extraFood2].filter(Boolean);
+    const excluded = [food, bonusFood, extraFood1, extraFood2, supplierFood].filter(Boolean);
     const spot = pickAppleSpot(excluded);
     if (!spot) return;
-    if (slot === 1) extraFood1 = { x: spot.x, y: spot.y, spawnTime: Date.now() };
-    else extraFood2 = { x: spot.x, y: spot.y, spawnTime: Date.now() };
+    const apple = { x: spot.x, y: spot.y, spawnTime: getFreshSpawnTime() };
+    if (slot === 1) extraFood1 = apple;
+    else if (slot === 2) extraFood2 = apple;
+    else supplierFood = apple;
 }
 
 function pruneFlavorTrails() {
@@ -1510,6 +1520,7 @@ function buyKitchenUpgrade(type) {
     if (type === 'fasterOvens') startPassiveGoldTick();
     if (type === 'extraTables' && food) spawnExtraApple(1);
     if (type === 'expandedDining' && food) spawnExtraApple(2);
+    if (type === 'appleSupplier' && food) spawnExtraApple(3);
     save();
     updateUI();
     updateKitchenUI();
@@ -1928,41 +1939,43 @@ function pickAppleSpot(exclude = []) {
     // Function to genfood a new apple position, ensuring it doesn't spawn on the snake
     function generateFood() {
     const spot = pickAppleSpot();
-    food = spot ? { x: spot.x, y: spot.y, spawnTime: Date.now() } : null;
+    food = spot ? { x: spot.x, y: spot.y, spawnTime: getFreshSpawnTime() } : null;
     bonusFood = null;
     extraFood1 = null;
     extraFood2 = null;
+    supplierFood = null;
 
     if (!food) return;
 
     const shouldSpawnDual = Math.random() * 100 < getDualAppleChance();
     if (shouldSpawnDual) {
         const bspot = pickAppleSpot([food]);
-        bonusFood = bspot ? { x: bspot.x, y: bspot.y, spawnTime: Date.now() } : null;
+        bonusFood = bspot ? { x: bspot.x, y: bspot.y, spawnTime: getFreshSpawnTime() } : null;
     }
 
     if (data.kitchenExtraTables) spawnExtraApple(1);
     if (data.kitchenExpandedDining) spawnExtraApple(2);
+    if (data.kitchenAppleSupplier) spawnExtraApple(3);
 
     queueNextAppleLocation();
     apple_growth = apple_growth + 1
     }
 
     function respawnMainApple() {
-  const blocked = [bonusFood, extraFood1, extraFood2].filter(Boolean);
+  const blocked = [bonusFood, extraFood1, extraFood2, supplierFood].filter(Boolean);
   if (data.phasePremonition && nextAppleLocation && !isSpotBlocked(nextAppleLocation, blocked)) {
-    food = { x: nextAppleLocation.x, y: nextAppleLocation.y, spawnTime: Date.now() };
+    food = { x: nextAppleLocation.x, y: nextAppleLocation.y, spawnTime: getFreshSpawnTime() };
   } else {
     const nextFood = pickAppleSpot(blocked);
-    if (nextFood) food = { x: nextFood.x, y: nextFood.y, spawnTime: Date.now() };
+    if (nextFood) food = { x: nextFood.x, y: nextFood.y, spawnTime: getFreshSpawnTime() };
   }
   queueNextAppleLocation();
 }
 
 function respawnBonusApple() {
-  const excluded = [food, extraFood1, extraFood2].filter(Boolean);
+  const excluded = [food, extraFood1, extraFood2, supplierFood].filter(Boolean);
   const nextBonus = pickAppleSpot(excluded);
-  if (nextBonus) bonusFood = { x: nextBonus.x, y: nextBonus.y, spawnTime: Date.now() };
+  if (nextBonus) bonusFood = { x: nextBonus.x, y: nextBonus.y, spawnTime: getFreshSpawnTime() };
 }
 
 function getGoldAppleRenderColor(levelOffset = 0) {
@@ -3322,7 +3335,16 @@ window.addEventListener("keydown", (e) => {
         
         if (endingActive) return;
         if (titleActive) { setTimeout(gameLoop, 100); return; }
-        if (isPaused || modalActive) { setTimeout(gameLoop, 100); return; }
+        if (isPaused || modalActive) {
+            if (!gameLoopPauseStart) gameLoopPauseStart = Date.now();
+            setTimeout(gameLoop, 100); return;
+        }
+        if (gameLoopPauseStart) {
+            const pausedMs = Date.now() - gameLoopPauseStart;
+            const extendApple = a => { if (a && a.spawnTime) a.spawnTime += pausedMs; };
+            extendApple(food); extendApple(bonusFood); extendApple(extraFood1); extendApple(extraFood2); extendApple(supplierFood);
+            gameLoopPauseStart = 0;
+        }
         if (Date.now() < soulAnchorPauseUntil) { setTimeout(gameLoop, 50); return; }
         applyQueuedDirection();
         
@@ -3367,18 +3389,19 @@ window.addEventListener("keydown", (e) => {
         const ateBonusApple = bonusFood && head.x === bonusFood.x && head.y === bonusFood.y;
         const ateExtraApple1 = extraFood1 && head.x === extraFood1.x && head.y === extraFood1.y;
         const ateExtraApple2 = extraFood2 && head.x === extraFood2.x && head.y === extraFood2.y;
+        const ateSupplierApple = supplierFood && head.x === supplierFood.x && head.y === supplierFood.y;
         if (soulHusk && soulHusk.segments && soulHusk.segments.some(seg => seg.x === head.x && seg.y === head.y)) {
             growCount += soulHusk.restoreLength;
             soulHusk = null;
         }
-        if (ateMainApple || ateBonusApple || ateExtraApple1 || ateExtraApple2) {
+        if (ateMainApple || ateBonusApple || ateExtraApple1 || ateExtraApple2 || ateSupplierApple) {
             // ✅ Clear death lore on first apple
   const box = document.getElementById("save-code-box");
   if (box && box.value && data.diedLastRun === false) {
     box.value = "... The memory fades...";
     setTimeout(() => box.value = "", 1200);
   }
-            const eatenApple = ateMainApple ? food : ateBonusApple ? bonusFood : ateExtraApple1 ? extraFood1 : extraFood2;
+            const eatenApple = ateMainApple ? food : ateBonusApple ? bonusFood : ateExtraApple1 ? extraFood1 : ateExtraApple2 ? extraFood2 : supplierFood;
             applyAppleRewards(1, true, eatenApple);
             if ((data.sheddingLevel || 0) > 0) {
                 const profile = getSheddingProfile();
@@ -3395,6 +3418,7 @@ window.addEventListener("keydown", (e) => {
             if (ateBonusApple) respawnBonusApple();
             if (ateExtraApple1) spawnExtraApple(1);
             if (ateExtraApple2) spawnExtraApple(2);
+            if (ateSupplierApple) spawnExtraApple(3);
             resetPhasePremonitionPreview();
             save(); updateUI(); updateKitchenUI();
         }
@@ -3453,6 +3477,7 @@ window.addEventListener("keydown", (e) => {
         drawApple(bonusFood, 1);
         drawApple(extraFood1, 0);
         drawApple(extraFood2, 1);
+        drawApple(supplierFood, 0);
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
         if (soulHusk && soulHusk.segments) {
@@ -3603,6 +3628,8 @@ function init() {
     flavorTrails = [];
     extraFood1 = null;
     extraFood2 = null;
+    supplierFood = null;
+    gameLoopPauseStart = 0;
     
     tSpd = 0;
     tSz = 0;
