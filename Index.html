@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Snake 2: RPG Snake</title>
+    <title>Snake 1: Idle Snake</title>
     <style>
         :root {
             --gold: #ffd700;
@@ -444,7 +444,7 @@
   <canvas id="title-bg" width="560" height="560"></canvas>
 
   <div id="title-ui">
-    <h1>Snake 2</h1>
+    <h1>Snake 1</h1>
 
     <p class="lore">
       A forgotten serpent grows beyond the grid.<br>
@@ -727,7 +727,7 @@
                     <button id="kitchen-btn-betterSauce" class="classic-btn" onclick="buyKitchenUpgrade('betterSauce')">
                         <span>
                             <span style="font-weight:bold;">Better Sauce</span><br>
-                            <span style="font-size:0.8em; color:#aaa;">+1 passive gold/sec · Apples leave a 3-tile trail (+1G each) · "Customers keep coming back…"</span>
+                            <span style="font-size:0.8em; color:#aaa;">+1 passive gold/sec · Apples leave a 3-tile trail (+1G each)· </span>
                         </span>
                         <span class="btn-price">75G</span>
                     </button>
@@ -795,7 +795,7 @@
                     <button id="anim-btn-aiV1" class="classic-btn" onclick="buyAnimatronicsUpgrade('aiV1')">
                         <span>
                             <span style="font-weight:bold;">Animatronic AI v1</span><br>
-                            <span style="font-size:0.8em; color:#aaa;">One <span style="color:#ff6200;">moving target</span> apple per run · Eating it spawns 2 bonus apples · Gives 3× gold</span>
+                            <span style="font-size:0.8em; color:#aaa;">One moving target apple per run · Eating it spawns 2 bonus apples · Gives 3× gold</span>
                         </span>
                         <span class="btn-price">1000G</span>
                     </button>
@@ -913,7 +913,7 @@
     let endingTriggered = false;
     let endingActive = false;
     let endingAwaitingClick = false;
-    let queuedEndingText = "Thanks for playing Snake 2.";
+    let queuedEndingText = "Thanks for playing Snake 1.";
     const IMAGE_SKIN_ID = 'triple-image';
     const snakeImageSkinAssets = {
         head: new Image(),
@@ -2736,7 +2736,7 @@ function isSkinRequirementMet(requirement) {
     if (requirement === 'averageEnding') return data.endingAverageUnlocked === true;
     return true;
 }
-function openCredits(endingText = "Thanks for playing Snake 2.") {
+function openCredits(endingText = "Thanks for playing Snake 1.") {
     const textEl = document.getElementById("credits-ending-text");
     if (textEl) textEl.innerText = endingText;
 
@@ -3752,7 +3752,7 @@ function init() {
     endingActive = false;
     endingTriggered = false;
     endingAwaitingClick = false;
-    queuedEndingText = "Thanks for playing Snake 2.";
+    queuedEndingText = "Thanks for playing Snake 1.";
     const endingOverlay = document.getElementById('ending-overlay');
     if (endingOverlay) endingOverlay.style.display = 'none';
     creditsMusic.pause();
@@ -3886,4 +3886,4 @@ acc.forEach(a => {
 });
 </script>
 </body>
-    </html>
+                                                                      </html>
