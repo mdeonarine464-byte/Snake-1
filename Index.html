@@ -437,6 +437,35 @@
     width: 100% !important;
     height: 100% !important;
 }
+/* ── VIP Buff Picker ─────────────────────────────── */
+#vip-buff-overlay {
+    display:none; position:absolute; inset:0;
+    background:rgba(0,0,0,0.92); z-index:10;
+    flex-direction:column; align-items:center; justify-content:center;
+    padding:24px 16px; overflow-y:auto;
+}
+#vip-buff-overlay.active { display:flex; }
+.vip-buff-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+    gap:10px; max-width:720px; width:100%; margin:14px 0;
+}
+.vip-buff-cell {
+    background:#090909; border:1px solid #262626; border-radius:10px;
+    padding:10px 12px; cursor:pointer;
+    transition:border-color .12s, box-shadow .12s;
+    text-align:left;
+}
+.vip-buff-cell:hover { border-color:#4a4a4a; }
+.vip-buff-cell.selected { box-shadow:0 0 0 2px inset currentColor; }
+.vip-buff-cell-name { font-size:.75em; font-weight:700; line-height:1.2; }
+.vip-buff-cell-desc { font-size:.63em; color:#666; margin-top:5px; line-height:1.35; }
+#vip-offline-toast {
+    display:none; position:fixed; bottom:18px; left:50%; transform:translateX(-50%);
+    background:#111; border:1px solid var(--gold); border-radius:8px;
+    padding:8px 18px; font-size:.75em; color:var(--gold);
+    z-index:9999; white-space:nowrap;
+}
     </style>
 </head>
 <body onmousemove="checkPause(event)">
@@ -461,6 +490,20 @@
   <button id="btn-opt2" onclick="openOptions()">Options</button>
   <button onclick="openTutorial()">Tutorial</button>
 </div>
+
+<!-- VIP Buff Picker (shown when VIP Packages upgrade is owned) -->
+<div id="vip-buff-overlay">
+  <h2 style="color:var(--gold);margin:0 0 4px;font-size:1.1em;letter-spacing:2px;">★ VIP PACKAGES</h2>
+  <p style="font-size:.68em;color:#777;margin:0 0 14px;letter-spacing:.08em;font-style:italic;">Premium experiences. No questions asked.</p>
+  <p style="font-size:.72em;color:#aaa;margin:0 0 4px;">Select a side buff for this run:</p>
+  <div class="vip-buff-grid" id="vip-buff-grid"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:6px;">
+    <button onclick="confirmVipStart()" style="padding:10px 40px;font-size:.95em;background:var(--gold);color:#000;border:none;border-radius:8px;cursor:pointer;font-weight:bold;letter-spacing:1px;">START RUN</button>
+    <button onclick="skipVipBuff()" style="padding:4px 16px;font-size:.65em;background:transparent;color:#444;border:none;cursor:pointer;letter-spacing:.05em;">Skip (no buff)</button>
+  </div>
+</div>
+
+<div id="vip-offline-toast"></div>
 
 <div id="tutorial-modal" class="modal">
     <div class="modal-content" style="max-width:500px; border-color:var(--xp);">
@@ -799,6 +842,13 @@
                         </span>
                         <span class="btn-price">1000G</span>
                     </button>
+                    <button id="anim-btn-vipPackages" class="classic-btn" onclick="buyAnimatronicsUpgrade('vipPackages')">
+                        <span>
+                            <span style="font-weight:bold; color:var(--gold);">★ VIP Packages</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Pick a side buff at run start · Offline gold multiplier (×2 passive rate while away) · Premium experiences. No questions asked.</span>
+                        </span>
+                        <span class="btn-price">2500G</span>
+                    </button>
                 </div>
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Arcade</button>
@@ -1063,7 +1113,9 @@
         kitchenExpandedDining: false,
         animatronicsUnlocked: false,
         animatronicsServos: false,
-        animatronicsAI: false
+        animatronicsAI: false,
+        vipPackages: false,
+        lastSeen: 0
     };
     let data = Object.assign({}, defaultSaveData, JSON.parse(localStorage.getItem('Snake_2026_SoulReveal')) || {});
     if (!Array.isArray(data.owned)) data.owned = ['#00fbff'];
@@ -1129,14 +1181,24 @@
     applyNeonPreference();
     applyGameBackground();
 
-    function save() { localStorage.setItem('Snake_2026_SoulReveal', JSON.stringify(data)); }
+    function save() {
+        if (data.vipPackages) data.lastSeen = Date.now();
+        localStorage.setItem('Snake_2026_SoulReveal', JSON.stringify(data));
+    }
     window.startGame = function () {
+  if (data.vipPackages && !_vipPickerOpen) {
+    _vipPickerOpen = true;
+    showVipBuffPicker();
+    return;
+  }
+  _vipPickerOpen = false;
   titleActive = false;
   isPaused = false;
   playDefaultMusic();
 
-  // mark title seen
+  // mark title seen, record last seen for offline gold
   data.titleSeen = true;
+  data.lastSeen = Date.now();
   save();
 
   const ts = document.getElementById("title-screen");
@@ -1207,6 +1269,10 @@
     let lastAppleEatTime = 0;
     let flavorTrails = [];
     let passiveGoldInterval = null;
+    let currentRunBuff = null;
+    let _vipPickerOpen = false;
+    let _buffMoltCount = 0;
+    let _buffLengthMilestone = 0;
     let gameLoopPauseStart = 0;
     let dashTicks = 0;
     let dashCooldownEnd = 0;
@@ -1563,8 +1629,8 @@ function buyKitchenUpgrade(type) {
 
 // ─── Animatronic Upgrade System ───────────────────────────────────────────────
 
-const ANIM_COSTS = { animatronics: 500, servos: 750, aiV1: 1000 };
-const ANIM_KEYS  = { animatronics: 'animatronicsUnlocked', servos: 'animatronicsServos', aiV1: 'animatronicsAI' };
+const ANIM_COSTS = { animatronics: 500, servos: 750, aiV1: 1000, vipPackages: 2500 };
+const ANIM_KEYS  = { animatronics: 'animatronicsUnlocked', servos: 'animatronicsServos', aiV1: 'animatronicsAI', vipPackages: 'vipPackages' };
 
 function updateAnimatronicsUI() {
     const keys = Object.values(ANIM_KEYS);
@@ -1612,8 +1678,9 @@ function spawnAiApple() {
 function buyAnimatronicsUpgrade(type) {
     const dataKey = ANIM_KEYS[type];
     if (!dataKey || data[dataKey]) return;
-    if (type === 'servos' && !data.animatronicsUnlocked) { alert('Requires Animatronics'); return; }
-    if (type === 'aiV1'  && !data.animatronicsServos)    { alert('Requires Improved Servos'); return; }
+    if (type === 'servos'      && !data.animatronicsUnlocked) { alert('Requires Animatronics'); return; }
+    if (type === 'aiV1'        && !data.animatronicsServos)   { alert('Requires Improved Servos'); return; }
+    if (type === 'vipPackages' && !data.animatronicsAI)       { alert('Requires Animatronic AI v1'); return; }
     const cost = ANIM_COSTS[type];
     if (data.gems < cost) { alert('Not enough Gold (' + cost + 'G needed)'); return; }
     data.gems -= cost;
@@ -1626,6 +1693,96 @@ function buyAnimatronicsUpgrade(type) {
 }
 
 // ─── End Animatronic Upgrade System ───────────────────────────────────────────
+
+// ─── VIP Packages System ──────────────────────────────────────────────────────
+
+const VIP_BUFF_DEFS = [
+    { id:'slipstream',   name:'Slipstream',   color:'#ff4500', desc:'More length = more speed. Each body segment beyond 5 reduces tick delay by 1ms (capped at −40ms).' },
+    { id:'quick_turn',   name:'Quick Turn',   color:'#adff2f', desc:'Double-tap opposite direction within 200ms to reverse instantly.' },
+    { id:'growth_bonus', name:'Growth Bonus', color:'#4ecca3', desc:'Every 10 body segments triggers a random bonus effect.' },
+    { id:'molt',         name:'Molt',         color:'#c8a0ff', desc:'Every 15 apples eaten, passively shed 2 tail segments.' },
+    { id:'gold_boost',   name:'Gold Rush',    color:'#ffd700', desc:'All apple gold rewards increased by 30%.' },
+    { id:'dual_apple',   name:'Dual Apple',   color:'#ff8c00', desc:'22% chance a second apple spawns each time one is eaten.' },
+    { id:'echo_growth',  name:'Echo Growth',  color:'#00fbff', desc:'Every 5th apple eaten grants +2 free body growth.' },
+    { id:'xp_boost',     name:'XP Surge',     color:'#9370db', desc:'All XP gains increased by 15%.' },
+];
+
+function hasBuff(id) {
+    return currentRunBuff === id;
+}
+
+let _pendingVipBuff = null;
+
+function showVipBuffPicker() {
+    _pendingVipBuff = null;
+    buildVipBuffGrid();
+    const overlay = document.getElementById('vip-buff-overlay');
+    if (overlay) overlay.classList.add('active');
+}
+
+function buildVipBuffGrid() {
+    const grid = document.getElementById('vip-buff-grid');
+    if (!grid) return;
+    grid.innerHTML = VIP_BUFF_DEFS.map(def => {
+        const sel = _pendingVipBuff === def.id;
+        return `<button class="vip-buff-cell ${sel ? 'selected' : ''}"
+            style="color:${def.color};border-color:${sel ? def.color : '#262626'}"
+            onclick="selectVipBuff('${def.id}')">
+            <div class="vip-buff-cell-name">${def.name}</div>
+            <div class="vip-buff-cell-desc">${def.desc}</div>
+        </button>`;
+    }).join('');
+}
+
+window.selectVipBuff = function(id) {
+    _pendingVipBuff = (_pendingVipBuff === id) ? null : id;
+    buildVipBuffGrid();
+};
+
+window.confirmVipStart = function() {
+    currentRunBuff = _pendingVipBuff;
+    _pendingVipBuff = null;
+    const overlay = document.getElementById('vip-buff-overlay');
+    if (overlay) overlay.classList.remove('active');
+    startGame();
+};
+
+window.skipVipBuff = function() {
+    _pendingVipBuff = null;
+    currentRunBuff = null;
+    const overlay = document.getElementById('vip-buff-overlay');
+    if (overlay) overlay.classList.remove('active');
+    startGame();
+};
+
+// Offline gold: award accumulated passive gold (×2 multiplier) since lastSeen
+function applyOfflineGold() {
+    if (!data.vipPackages || !data.lastSeen) return;
+    const rate = getPassiveGoldPerSec();
+    if (rate <= 0) return;
+    const awayMs = Date.now() - data.lastSeen;
+    const awaySec = Math.min(awayMs / 1000, 86400); // cap at 24h
+    if (awaySec < 30) return; // ignore tiny gaps
+    const earned = Math.floor(awaySec * rate * 2); // 2× offline multiplier
+    if (earned <= 0) return;
+    data.gems += earned;
+    data.lastSeen = Date.now();
+    save();
+    showOfflineToast(earned, Math.round(awaySec));
+}
+
+function showOfflineToast(gold, seconds) {
+    const el = document.getElementById('vip-offline-toast');
+    if (!el) return;
+    const timeStr = seconds >= 3600
+        ? Math.round(seconds / 3600) + 'h'
+        : seconds >= 60 ? Math.round(seconds / 60) + 'm' : seconds + 's';
+    el.textContent = `★ VIP Offline Bonus: +${gold.toLocaleString()}G (away ${timeStr}, ×2 rate)`;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+// ─── End VIP Packages System ──────────────────────────────────────────────────
 
 function applyAppleRewards(multiplier = 1, countAsApple = true, apple = null) {
     if (countAsApple) {
@@ -1656,17 +1813,42 @@ function applyAppleRewards(multiplier = 1, countAsApple = true, apple = null) {
     // Fresh Ingredients: streak multiplier (+10% gold per streak, max +100% at 10)
     const streakMult       = data.kitchenFreshIngredients ? (1 + Math.min(10, appleStreak) * 0.1) : 1;
     const animatronicsMult = data.animatronicsUnlocked ? 5 : 1;
+    const vipGoldMult      = hasBuff('gold_boost') ? 1.3 : 1;
+    const vipXPMult        = hasBuff('xp_boost')   ? 1.15 : 1;
     const qualityBonus     = getAppleQualityBonus(apple) * multiplier;
     const burnPenalty      = isAppleBurnt(apple) ? 5 : 0;
 
-    data.exp += 25 * multiplier * totalXP * goldAppleXPBonus * phaseXPScale;
-    const baseGold = Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale * streakMult * animatronicsMult) + qualityBonus;
+    data.exp += 25 * multiplier * totalXP * goldAppleXPBonus * phaseXPScale * vipXPMult;
+    const baseGold = Math.ceil(5 * multiplier * goldAppleGoldBonus * phaseGoldScale * streakMult * animatronicsMult * vipGoldMult) + qualityBonus;
     data.gems += Math.max(0, baseGold - burnPenalty);
     growCount += (data.evo + tEvo - 1) * multiplier;
 
     if ((data.echoGrowthLevel || 0) > 0 && countAsApple) {
         const triggers = Math.floor(applesEatenThisRun / 5) - Math.floor((applesEatenThisRun - multiplier) / 5);
         if (triggers > 0) growCount += getEchoGrowthBonus() * triggers;
+    }
+
+    if (countAsApple) {
+        // VIP Molt: shed 2 tail segments every 15 apples
+        if (hasBuff('molt')) {
+            _buffMoltCount++;
+            if (_buffMoltCount >= 15) {
+                _buffMoltCount = 0;
+                const shedCount = Math.min(2, snake.length - 3);
+                for (let _mi = 0; _mi < shedCount; _mi++) snake.pop();
+            }
+        }
+
+        // VIP Echo Growth: every 5th apple +2 free growth (stacks with upgrade)
+        if (hasBuff('echo_growth')) {
+            const triggers = Math.floor(applesEatenThisRun / 5) - Math.floor((applesEatenThisRun - multiplier) / 5);
+            if (triggers > 0) growCount += 2 * triggers;
+        }
+
+        // VIP Dual Apple: 22% chance to spawn a bonus apple
+        if (hasBuff('dual_apple') && food) {
+            if (Math.random() < 0.22) spawnExtraApple(1);
+        }
     }
 }
 
@@ -2952,8 +3134,11 @@ function buySkin(hex, price) {
     updateUI();
 
     alert(
-        `GUARANTEED ${guaranteedRarity} LOOT BOX OPENED!\n\n` +
-        results.map(r => `(${r.rarity}) ${r.result}`).join("\n")
+        `GUARANTEED ${guaranteedRarity} LOOT BOX OPENED!\
+\
+` +
+        results.map(r => `(${r.rarity}) ${r.result}`).join("\
+")
     );
 }
 
@@ -3133,8 +3318,11 @@ function openLootBox() {
     updateUI();
 
     alert(
-        "PAID LOOT BOX OPENED!\n\n" +
-        results.map(r => `(${r.rarity}) ${r.result}`).join("\n")
+        "PAID LOOT BOX OPENED!\
+\
+" +
+        results.map(r => `(${r.rarity}) ${r.result}`).join("\
+")
     );
 }
 
@@ -3176,6 +3364,7 @@ function getLoopDelay() {
     let baseDelay = Math.max(25, data.spd - tSpd);
     if (data.kitchenFasterOvens)    baseDelay = Math.max(25, baseDelay - 8);
     if (data.animatronicsServos)    baseDelay = Math.max(25, baseDelay - 5);
+    if (hasBuff('slipstream'))      baseDelay = Math.max(25, baseDelay - Math.min(40, Math.max(0, snake.length - 5)));
     if (isPhasing && data.temporalPhaseSlow) return Math.round(baseDelay * 1.3);
     return baseDelay;
 }
@@ -3479,6 +3668,18 @@ window.addEventListener("keydown", (e) => {
             appleStreak = 0;
             lastAppleEatTime = 0;
         }
+        // VIP Growth Bonus: random effect at every 10-segment milestone
+        if (hasBuff('growth_bonus')) {
+            const milestone = Math.floor(snake.length / 10) * 10;
+            if (milestone >= 10 && milestone > _buffLengthMilestone) {
+                _buffLengthMilestone = milestone;
+                const roll = Math.floor(Math.random() * 4);
+                if (roll === 0) { growCount += 4; }
+                else if (roll === 1) { data.gems += Math.ceil(getPassiveGoldPerSec() * 10 + 20); }
+                else if (roll === 2) { isPhasing = true; setTimeout(() => { isPhasing = false; }, 2500); }
+                else { growCount += 2; data.exp += 100; }
+            }
+        }
 
         // Dash: decrement active dash ticks
         if (dashTicks > 0) dashTicks--;
@@ -3678,7 +3879,7 @@ window.addEventListener("keydown", (e) => {
     let _qtLastDir = null, _qtLastTime = 0;
 
     function tryQuickTurn(dir) {
-        if (!data.quickTurn) { queueDirection(dir); return; }
+        if (!data.quickTurn && !hasBuff('quick_turn')) { queueDirection(dir); return; }
         const now = Date.now();
         // Check if this direction is opposite to current movement
         const isOpp = dir.x === -dx && dir.y === -dy;
@@ -3803,6 +4004,9 @@ if (data.diedLastRun) {
     aiApple = null; aiAppleEaten = false; aiBonusFood1 = null; aiBonusFood2 = null;
     dashTicks = 0; dashCooldownEnd = 0;
     if (data.animatronicsAI && food) spawnAiApple();
+    // Reset per-run VIP buff counters
+    _buffMoltCount = 0;
+    _buffLengthMilestone = 0;
 }
 
     // Cookie Clicker style encoding (Base64)
@@ -3827,6 +4031,7 @@ function importSave() {
     }
 }
 
+    applyOfflineGold();
     init(); updateUI(); updateKitchenUI(); applyLanguage(); gameLoop(); startPassiveGoldTick();
 // Fullscreen on canvas click
 (function() {
@@ -3886,4 +4091,4 @@ acc.forEach(a => {
 });
 </script>
 </body>
-                                                                      </html>
+</html>
