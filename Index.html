@@ -799,6 +799,35 @@
                         </span>
                         <span class="btn-price">1000G</span>
                     </button>
+                    <div style="font-size:0.72em; color:#777; text-align:center; margin:6px 0 2px; letter-spacing:0.05em;">BOOKINGS &amp; EVENTS</div>
+                    <button id="anim-btn-privateBookings" class="classic-btn" onclick="buyAnimatronicsUpgrade('privateBookings')">
+                        <span>
+                            <span style="font-weight:bold;">Private Bookings</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+2 passive gold/sec · Offline gold generation · "Some clients request… privacy."</span>
+                        </span>
+                        <span class="btn-price">800G</span>
+                    </button>
+                    <button id="anim-btn-privateEvents" class="classic-btn" onclick="buyAnimatronicsUpgrade('privateEvents')">
+                        <span>
+                            <span style="font-weight:bold;">Private Events</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+4 passive gold/sec · Increased offline gold rate · "Standard reservations… mostly."</span>
+                        </span>
+                        <span class="btn-price">1200G</span>
+                    </button>
+                    <button id="anim-btn-officeParties" class="classic-btn" onclick="buyAnimatronicsUpgrade('officeParties')">
+                        <span>
+                            <span style="font-weight:bold;">Office Parties</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+3 passive gold/sec · Medium offline income · "Team building has never been more… interactive."</span>
+                        </span>
+                        <span class="btn-price">1000G</span>
+                    </button>
+                    <button id="anim-btn-vipReservations" class="classic-btn" onclick="buyAnimatronicsUpgrade('vipReservations')">
+                        <span>
+                            <span style="font-weight:bold;">VIP Reservations</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+6 passive gold/sec · Bigger offline gold boost</span>
+                        </span>
+                        <span class="btn-price">1800G</span>
+                    </button>
                 </div>
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Arcade</button>
@@ -1063,7 +1092,12 @@
         kitchenExpandedDining: false,
         animatronicsUnlocked: false,
         animatronicsServos: false,
-        animatronicsAI: false
+        animatronicsAI: false,
+        animPrivateBookings: false,
+        animPrivateEvents: false,
+        animOfficeParties: false,
+        animVIPReservations: false,
+        lastSaveTime: 0
     };
     let data = Object.assign({}, defaultSaveData, JSON.parse(localStorage.getItem('Snake_2026_SoulReveal')) || {});
     if (!Array.isArray(data.owned)) data.owned = ['#00fbff'];
@@ -1091,6 +1125,37 @@
     if (data.customSkinTail) snakeImageSkinAssets.tail.src = data.customSkinTail;
     if (data.customMusic) defaultMusic.src = data.customMusic;
     if (data.customGameBackground) playfieldBackgroundImage.src = data.customGameBackground;
+
+    // ── Offline gold calculation ──────────────────────────────────────────────
+    (function applyOfflineGold() {
+        if (!data.lastSaveTime) return;
+        const offlineRate = (
+            (data.animPrivateBookings  ? 2 : 0) +
+            (data.animPrivateEvents    ? 4 : 0) +
+            (data.animOfficeParties    ? 3 : 0) +
+            (data.animVIPReservations  ? 6 : 0)
+        ) * (data.kitchenCleanerKitchen ? 1.5 : 1);
+        if (offlineRate <= 0) return;
+
+        const onlineRate = (
+            (data.kitchenBetterSauce  ? 1 : 0) +
+            (data.kitchenExtraTables  ? 2 : 0) +
+            (data.animatronicsUnlocked ? (data.animatronicsServos ? 8 : 2) : 0) +
+            (data.animPrivateBookings  ? 2 : 0) +
+            (data.animPrivateEvents    ? 4 : 0) +
+            (data.animOfficeParties    ? 3 : 0) +
+            (data.animVIPReservations  ? 6 : 0)
+        ) * (data.kitchenCleanerKitchen ? 1.5 : 1);
+
+        const elapsedSec = Math.max(0, (Date.now() - data.lastSaveTime) / 1000);
+        const maxOfflineGold = onlineRate * elapsedSec * 0.75;
+        const earnedGold = Math.floor(Math.min(offlineRate * 0.5 * elapsedSec, maxOfflineGold));
+
+        if (earnedGold > 0) {
+            data.gems += earnedGold;
+            window._offlineGoldEarned = earnedGold;
+        }
+    })();
 
     function normalizeControlValue(value) {
         return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ').slice(0, 12);
@@ -1129,7 +1194,7 @@
     applyNeonPreference();
     applyGameBackground();
 
-    function save() { localStorage.setItem('Snake_2026_SoulReveal', JSON.stringify(data)); }
+    function save() { data.lastSaveTime = Date.now(); localStorage.setItem('Snake_2026_SoulReveal', JSON.stringify(data)); }
     window.startGame = function () {
   titleActive = false;
   isPaused = false;
@@ -1141,6 +1206,17 @@
 
   const ts = document.getElementById("title-screen");
   if (ts) ts.remove();
+
+  if (window._offlineGoldEarned > 0) {
+      const msg = document.getElementById('soul-anchor-toast');
+      if (msg) {
+          msg.style.display = 'block';
+          msg.innerText = '+' + window._offlineGoldEarned.toLocaleString() + 'G earned offline';
+          clearTimeout(window._offlineGoldToastTimer);
+          window._offlineGoldToastTimer = setTimeout(() => { msg.style.display = 'none'; }, 3500);
+      }
+      window._offlineGoldEarned = 0;
+  }
 };
     function markTitleSeen() {
         data.titleSeen = true;
@@ -1422,6 +1498,20 @@ function getPassiveGoldPerSec() {
     if (data.kitchenBetterSauce) base += 1;
     if (data.kitchenExtraTables) base += 2;
     if (data.animatronicsUnlocked) base += data.animatronicsServos ? 8 : 2;
+    if (data.animPrivateBookings)   base += 2;
+    if (data.animPrivateEvents)     base += 4;
+    if (data.animOfficeParties)     base += 3;
+    if (data.animVIPReservations)   base += 6;
+    if (base > 0 && data.kitchenCleanerKitchen) base = Math.ceil(base * 1.5);
+    return base;
+}
+
+function getOfflineGoldRate() {
+    let base = 0;
+    if (data.animPrivateBookings)   base += 2;
+    if (data.animPrivateEvents)     base += 4;
+    if (data.animOfficeParties)     base += 3;
+    if (data.animVIPReservations)   base += 6;
     if (base > 0 && data.kitchenCleanerKitchen) base = Math.ceil(base * 1.5);
     return base;
 }
@@ -1563,8 +1653,8 @@ function buyKitchenUpgrade(type) {
 
 // ─── Animatronic Upgrade System ───────────────────────────────────────────────
 
-const ANIM_COSTS = { animatronics: 500, servos: 750, aiV1: 1000 };
-const ANIM_KEYS  = { animatronics: 'animatronicsUnlocked', servos: 'animatronicsServos', aiV1: 'animatronicsAI' };
+const ANIM_COSTS = { animatronics: 500, servos: 750, aiV1: 1000, privateBookings: 800, privateEvents: 1200, officeParties: 1000, vipReservations: 1800 };
+const ANIM_KEYS  = { animatronics: 'animatronicsUnlocked', servos: 'animatronicsServos', aiV1: 'animatronicsAI', privateBookings: 'animPrivateBookings', privateEvents: 'animPrivateEvents', officeParties: 'animOfficeParties', vipReservations: 'animVIPReservations' };
 
 function updateAnimatronicsUI() {
     const keys = Object.values(ANIM_KEYS);
@@ -1612,8 +1702,12 @@ function spawnAiApple() {
 function buyAnimatronicsUpgrade(type) {
     const dataKey = ANIM_KEYS[type];
     if (!dataKey || data[dataKey]) return;
-    if (type === 'servos' && !data.animatronicsUnlocked) { alert('Requires Animatronics'); return; }
-    if (type === 'aiV1'  && !data.animatronicsServos)    { alert('Requires Improved Servos'); return; }
+    if (type === 'servos'          && !data.animatronicsUnlocked)  { alert('Requires Animatronics'); return; }
+    if (type === 'aiV1'            && !data.animatronicsServos)     { alert('Requires Improved Servos'); return; }
+    if (type === 'privateBookings' && !data.animatronicsUnlocked)  { alert('Requires Animatronics'); return; }
+    if (type === 'privateEvents'   && !data.animPrivateBookings)   { alert('Requires Private Bookings'); return; }
+    if (type === 'officeParties'   && !data.animPrivateBookings)   { alert('Requires Private Bookings'); return; }
+    if (type === 'vipReservations' && !data.animPrivateEvents)     { alert('Requires Private Events'); return; }
     const cost = ANIM_COSTS[type];
     if (data.gems < cost) { alert('Not enough Gold (' + cost + 'G needed)'); return; }
     data.gems -= cost;
