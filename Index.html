@@ -1644,7 +1644,9 @@ function updateKitchenUI() {
         const btn = document.getElementById('kitchen-btn-' + type);
         if (!btn) return;
         const isOwned = data[KITCHEN_DATA_KEYS[type]];
-        btn.classList.toggle('locked-choice', isOwned);
+        btn.style.opacity = isOwned ? '0.6' : '1';
+        btn.style.pointerEvents = isOwned ? 'none' : '';
+        btn.disabled = !!isOwned;
         const priceEl = btn.querySelector('.btn-price');
         if (priceEl) priceEl.textContent = isOwned ? 'OWNED' : cost + 'G';
     });
@@ -1727,7 +1729,9 @@ function updateAnimatronicsUI() {
         const btn = document.getElementById('anim-btn-' + type);
         if (!btn) return;
         const owned = data[ANIM_KEYS[type]];
-        btn.classList.toggle('locked-choice', owned);
+        btn.style.opacity = owned ? '0.6' : '1';
+        btn.style.pointerEvents = owned ? 'none' : '';
+        btn.disabled = !!owned;
         const priceEl = btn.querySelector('.btn-price');
         if (priceEl) priceEl.textContent = owned ? 'OWNED' : cost + 'G';
     });
@@ -4020,7 +4024,7 @@ function importSave() {
     }
 }
 
-    init(); updateUI(); updateKitchenUI(); applyLanguage(); gameLoop(); startPassiveGoldTick(); buildVIPBuffSelector();
+    init(); updateUI(); updateKitchenUI(); updateAnimatronicsUI(); applyLanguage(); gameLoop(); startPassiveGoldTick(); buildVIPBuffSelector();
 // Fullscreen on canvas click
 (function() {
     const gameCanvas = document.getElementById('game');
