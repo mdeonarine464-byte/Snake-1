@@ -218,8 +218,7 @@
 .tut-acc-btn.tut-open { background:#202020; border-left-color:#fff; color:#fff; }
 .tut-acc-panel { display:none; padding:4px 10px 8px 14px; background:#131313; border-left:3px solid #333; border-radius:0 0 4px 4px; margin-bottom:6px; font-size:0.82em; line-height:1.6; color:#ccc; }
 .tut-acc-panel p { margin:4px 0; }
-#vip-buff-selector { margin: 10px 0 6px; }
-#vip-buff-selector .vip-buff-label { color: #ffd700; font-size: 0.72em; letter-spacing: 0.08em; text-align: center; margin-bottom: 6px; }
+#vip-buff-selector { margin-top: 10px; }
 #vip-buff-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
 .vip-buff-btn { background: #090909; border: 1px solid #262626; border-radius: 7px; padding: 6px 5px; cursor: pointer; text-align: center; font-size: 0.7em; line-height: 1.3; transition: border-color 0.15s, box-shadow 0.15s; color: inherit; }
 .vip-buff-btn:hover { background: #121212; }
@@ -462,11 +461,7 @@
 
     <textarea id="title-save-box" placeholder="Paste Save Code (Optional)"></textarea>
 
-    <div id="vip-buff-selector" style="display:none;">
-      <div class="vip-buff-label">★ VIP — CHOOSE YOUR SIDE BUFF</div>
-      <div id="vip-buff-grid"></div>
-      <div id="vip-buff-tagline">Premium experiences. No questions asked.</div>
-    </div>
+
 
 <div class="press-any">PRESS START</div>
     <div class="title-buttons">
@@ -702,6 +697,13 @@
         <div style="display:flex; gap:5px; margin-top:5px;">
             <button class="classic-btn" style="padding:5px; flex:1; justify-content:center;" onclick="exportSave()">Export Code</button>
             <button class="classic-btn" style="padding:5px; flex:1; justify-content:center;" onclick="importSave()">Import Code</button>
+        </div>
+    </div>
+    <div id="vip-buff-selector" style="display:none; margin-top:10px;">
+        <button class="accordion stat-val" style="color:#ffd700; border-left:4px solid #ffd700; border-radius:12px 12px 0 0; margin-bottom:0;">★ VIP Side Buff</button>
+        <div class="panel-content" style="border-left:4px solid #ffd700; border-radius:0 0 12px 12px; padding:10px; margin-top:0;">
+            <div id="vip-buff-grid"></div>
+            <div id="vip-buff-tagline">Premium experiences. No questions asked.</div>
         </div>
     </div>
 </div>
@@ -1642,7 +1644,9 @@ function updateKitchenUI() {
         const btn = document.getElementById('kitchen-btn-' + type);
         if (!btn) return;
         const isOwned = data[KITCHEN_DATA_KEYS[type]];
-        btn.classList.toggle('locked-choice', isOwned);
+        btn.style.opacity = isOwned ? '0.6' : '1';
+        btn.style.pointerEvents = isOwned ? 'none' : '';
+        btn.disabled = !!isOwned;
         const priceEl = btn.querySelector('.btn-price');
         if (priceEl) priceEl.textContent = isOwned ? 'OWNED' : cost + 'G';
     });
@@ -1701,10 +1705,10 @@ function buildVIPBuffSelector() {
   panel.style.display = 'block';
   grid.innerHTML = BUFF_DEFS.map(b => {
     const sel = data.selectedBuff === b.id;
-    return `<button class="vip-buff-btn${sel ? ' vip-selected' : ''}" style="color:${b.color}; border-color:${sel ? b.color : '#262626'};"
+    return `<button class="vip-buff-btn${sel ? ' vip-selected' : ''}" style="color:${b.color}; border-color:${sel ? b.color : '#262626'}; opacity:${sel ? '0.6' : '1'}; pointer-events:${sel ? 'none' : 'auto'};"
       onclick="selectVIPBuff('${b.id}')">
       <span class="buff-name">${b.name}</span>
-      <span class="buff-desc">${b.desc}</span>
+      <span class="buff-desc" style="${sel ? 'color:#888' : ''}">${sel ? '✓ ACTIVE' : b.desc}</span>
     </button>`;
   }).join('');
 }
@@ -1725,7 +1729,9 @@ function updateAnimatronicsUI() {
         const btn = document.getElementById('anim-btn-' + type);
         if (!btn) return;
         const owned = data[ANIM_KEYS[type]];
-        btn.classList.toggle('locked-choice', owned);
+        btn.style.opacity = owned ? '0.6' : '1';
+        btn.style.pointerEvents = owned ? 'none' : '';
+        btn.disabled = !!owned;
         const priceEl = btn.querySelector('.btn-price');
         if (priceEl) priceEl.textContent = owned ? 'OWNED' : cost + 'G';
     });
@@ -4018,7 +4024,7 @@ function importSave() {
     }
 }
 
-    init(); updateUI(); updateKitchenUI(); applyLanguage(); gameLoop(); startPassiveGoldTick(); buildVIPBuffSelector();
+    init(); updateUI(); updateKitchenUI(); updateAnimatronicsUI(); applyLanguage(); gameLoop(); startPassiveGoldTick(); buildVIPBuffSelector();
 // Fullscreen on canvas click
 (function() {
     const gameCanvas = document.getElementById('game');
