@@ -914,20 +914,19 @@
                         </span>
                         <span class="btn-price">8000G</span>
                     </button>
-                    <div style="font-size:0.72em; color:#777; text-align:center; margin:6px 0 2px; letter-spacing:0.05em;">DISCRETION</div>
                     <button id="anim-btn-unlistedBookings" class="classic-btn" onclick="buyAnimatronicsUpgrade('unlistedBookings')">
                         <span>
                             <span style="font-weight:bold;">Unlisted Bookings</span><br>
                             <span style="font-size:0.8em; color:#aaa;">Halves offline decay (50%→25%) · "You won't find these on any schedule."</span>
                         </span>
-                        <span class="btn-price">5500G</span>
+                        <span class="btn-price">9000G</span>
                     </button>
                     <button id="anim-btn-discretionPolicy" class="classic-btn" onclick="buyAnimatronicsUpgrade('discretionPolicy')">
                         <span>
                             <span style="font-weight:bold;">Discretion Policy</span><br>
                             <span style="font-size:0.8em; color:#aaa;">Halves offline decay again (25%→12.5%) · "What happens here, stays here."</span>
                         </span>
-                        <span class="btn-price">6500G</span>
+                        <span class="btn-price">10000G</span>
                     </button>
                 </div>
 
@@ -1828,7 +1827,7 @@ const ANIM_COSTS = {
     privateBookings: 800, privateEvents: 1200, officeParties: 1000, vipReservations: 1800, vipPackages: 2500,
     exclusiveRentals: 3000, nighttimeBookings: 3500, nightShiftRentals: 4000, afterHoursAccess: 4500,
     afterParties: 5000, afterAfterParties: 6000, restrictedAccessEvents: 7000, closedDoorSessions: 8000,
-    unlistedBookings: 5500, discretionPolicy: 6500
+    unlistedBookings: 9000, discretionPolicy: 10000
 };
 const ANIM_KEYS = {
     animatronics: 'animatronicsUnlocked', servos: 'animatronicsServos', aiV1: 'animatronicsAI',
@@ -1934,7 +1933,7 @@ function buyAnimatronicsUpgrade(type) {
     if (type === 'afterAfterParties'      && !data.animAfterParties)            { alert('Requires After Parties'); return; }
     if (type === 'restrictedAccessEvents' && !data.animAfterAfterParties)       { alert('Requires After After Parties'); return; }
     if (type === 'closedDoorSessions'     && !data.animRestrictedAccessEvents)  { alert('Requires Restricted Access Events'); return; }
-    if (type === 'unlistedBookings'       && !data.animAfterHoursAccess)        { alert('Requires After-Hours Access'); return; }
+    if (type === 'unlistedBookings'       && !data.animClosedDoorSessions)      { alert('Requires Closed-Door Sessions'); return; }
     if (type === 'discretionPolicy'       && !data.animUnlistedBookings)        { alert('Requires Unlisted Bookings'); return; }
     const cost = ANIM_COSTS[type];
     if (data.gems < cost) { alert('Not enough Gold (' + cost + 'G needed)'); return; }
