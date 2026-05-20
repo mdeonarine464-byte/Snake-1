@@ -688,6 +688,10 @@
     <div id="game-container">
     <div id="pause-overlay">⏸ PAUSED</div>
     <div id="soul-anchor-toast" class="soul-anchor-toast">SOUL ANCHOR USED</div>
+    <div id="closed-door-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#000; z-index:110; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">
+        <div style="color:#ffd700; font-size:1.1em; font-weight:bold; letter-spacing:0.12em; text-align:center; text-transform:uppercase;">Closed-Door Session in progress</div>
+        <div id="closed-door-timer" style="color:#666; font-size:0.78em; margin-top:10px; letter-spacing:0.06em;"></div>
+    </div>
     <canvas id="game" width="400" height="400" title="Click to toggle fullscreen" style="cursor:pointer;"></canvas>
     
     <!-- New Save Code Section -->
@@ -852,6 +856,78 @@
                             <span style="font-size:0.8em; color:#aaa;">Choose a side buff before each run · ×1.5 offline gold · "Premium experiences. No questions asked."</span>
                         </span>
                         <span class="btn-price">2500G</span>
+                    </button>
+                    <div style="font-size:0.72em; color:#777; text-align:center; margin:6px 0 2px; letter-spacing:0.05em;">AFTER-HOURS</div>
+                    <button id="anim-btn-exclusiveRentals" class="classic-btn" onclick="buyAnimatronicsUpgrade('exclusiveRentals')">
+                        <span>
+                            <span style="font-weight:bold;">Exclusive Rentals</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+12 offline gold/sec · "Entire sections closed off to the public."</span>
+                        </span>
+                        <span class="btn-price">3000G</span>
+                    </button>
+                    <button id="anim-btn-nighttimeBookings" class="classic-btn" onclick="buyAnimatronicsUpgrade('nighttimeBookings')">
+                        <span>
+                            <span style="font-weight:bold;">Nighttime Bookings</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+8 offline gold/sec · "Reservations don't stop when the lights go out."</span>
+                        </span>
+                        <span class="btn-price">3500G</span>
+                    </button>
+                    <button id="anim-btn-nightShiftRentals" class="classic-btn" onclick="buyAnimatronicsUpgrade('nightShiftRentals')">
+                        <span>
+                            <span style="font-weight:bold;">Night Shift Rentals</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+10 offline gold/sec · "They don't ask questions. That's why they're popular."</span>
+                        </span>
+                        <span class="btn-price">4000G</span>
+                    </button>
+                    <button id="anim-btn-afterHoursAccess" class="classic-btn" onclick="buyAnimatronicsUpgrade('afterHoursAccess')">
+                        <span>
+                            <span style="font-weight:bold;">After-Hours Access</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+8 offline gold/sec · Offline cap raised to 50% · Strong offline income</span>
+                        </span>
+                        <span class="btn-price">4500G</span>
+                    </button>
+                    <button id="anim-btn-afterParties" class="classic-btn" onclick="buyAnimatronicsUpgrade('afterParties')">
+                        <span>
+                            <span style="font-weight:bold;">After Parties</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">×1.5 offline gold scaling · "The real fun starts after closing."</span>
+                        </span>
+                        <span class="btn-price">5000G</span>
+                    </button>
+                    <button id="anim-btn-afterAfterParties" class="classic-btn" onclick="buyAnimatronicsUpgrade('afterAfterParties')">
+                        <span>
+                            <span style="font-weight:bold;">After After Parties</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">×1.5 offline gold scaling (stacks) · "…you know, we know."</span>
+                        </span>
+                        <span class="btn-price">6000G</span>
+                    </button>
+                    <button id="anim-btn-restrictedAccessEvents" class="classic-btn" onclick="buyAnimatronicsUpgrade('restrictedAccessEvents')">
+                        <span>
+                            <span style="font-weight:bold;">Restricted Access Events</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">+15 offline gold/sec · "Attendance is… limited."</span>
+                        </span>
+                        <span class="btn-price">7000G</span>
+                    </button>
+                    <button id="anim-btn-closedDoorSessions" class="classic-btn" onclick="buyAnimatronicsUpgrade('closedDoorSessions')">
+                        <span>
+                            <span style="font-weight:bold;">Closed-Door Sessions</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Offline gold multiplier · Chance to trigger 5-min 5× gold blackout on login</span>
+                        </span>
+                        <span class="btn-price">8000G</span>
+                    </button>
+                    <div style="font-size:0.72em; color:#777; text-align:center; margin:6px 0 2px; letter-spacing:0.05em;">DISCRETION</div>
+                    <button id="anim-btn-unlistedBookings" class="classic-btn" onclick="buyAnimatronicsUpgrade('unlistedBookings')">
+                        <span>
+                            <span style="font-weight:bold;">Unlisted Bookings</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Halves offline decay (50%→25%) · "You won't find these on any schedule."</span>
+                        </span>
+                        <span class="btn-price">5500G</span>
+                    </button>
+                    <button id="anim-btn-discretionPolicy" class="classic-btn" onclick="buyAnimatronicsUpgrade('discretionPolicy')">
+                        <span>
+                            <span style="font-weight:bold;">Discretion Policy</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Halves offline decay again (25%→12.5%) · "What happens here, stays here."</span>
+                        </span>
+                        <span class="btn-price">6500G</span>
                     </button>
                 </div>
 
@@ -1123,6 +1199,16 @@
         animOfficeParties: false,
         animVIPReservations: false,
         animVIPPackages: false,
+        animExclusiveRentals: false,
+        animNighttimeBookings: false,
+        animNightShiftRentals: false,
+        animAfterHoursAccess: false,
+        animAfterParties: false,
+        animAfterAfterParties: false,
+        animRestrictedAccessEvents: false,
+        animClosedDoorSessions: false,
+        animUnlistedBookings: false,
+        animDiscretionPolicy: false,
         selectedBuff: null,
         lastSaveTime: 0
     };
@@ -1157,31 +1243,57 @@
     (function applyOfflineGold() {
         if (!data.lastSaveTime) return;
         const offlineRate = (
-            (data.animPrivateBookings  ? 2 : 0) +
-            (data.animPrivateEvents    ? 4 : 0) +
-            (data.animOfficeParties    ? 3 : 0) +
-            (data.animVIPReservations  ? 6 : 0)
+            (data.animPrivateBookings        ? 2  : 0) +
+            (data.animPrivateEvents          ? 4  : 0) +
+            (data.animOfficeParties          ? 3  : 0) +
+            (data.animVIPReservations        ? 6  : 0) +
+            (data.animExclusiveRentals       ? 12 : 0) +
+            (data.animNighttimeBookings      ? 8  : 0) +
+            (data.animNightShiftRentals      ? 10 : 0) +
+            (data.animAfterHoursAccess       ? 8  : 0) +
+            (data.animRestrictedAccessEvents ? 15 : 0)
         ) * (data.kitchenCleanerKitchen ? 1.5 : 1);
         if (offlineRate <= 0) return;
 
         const onlineRate = (
-            (data.kitchenBetterSauce  ? 1 : 0) +
-            (data.kitchenExtraTables  ? 2 : 0) +
+            (data.kitchenBetterSauce         ? 1  : 0) +
+            (data.kitchenExtraTables         ? 2  : 0) +
             (data.animatronicsUnlocked ? (data.animatronicsServos ? 8 : 2) : 0) +
-            (data.animPrivateBookings  ? 2 : 0) +
-            (data.animPrivateEvents    ? 4 : 0) +
-            (data.animOfficeParties    ? 3 : 0) +
-            (data.animVIPReservations  ? 6 : 0)
+            (data.animPrivateBookings        ? 2  : 0) +
+            (data.animPrivateEvents          ? 4  : 0) +
+            (data.animOfficeParties          ? 3  : 0) +
+            (data.animVIPReservations        ? 6  : 0) +
+            (data.animExclusiveRentals       ? 12 : 0) +
+            (data.animNighttimeBookings      ? 8  : 0) +
+            (data.animNightShiftRentals      ? 10 : 0) +
+            (data.animAfterHoursAccess       ? 8  : 0) +
+            (data.animRestrictedAccessEvents ? 15 : 0)
         ) * (data.kitchenCleanerKitchen ? 1.5 : 1);
 
         const elapsedSec = Math.max(0, (Date.now() - data.lastSaveTime) / 1000);
-        const maxOfflineGold = onlineRate * elapsedSec * 0.75;
-        const vipOfflineMult = data.animVIPPackages ? 1.5 : 1;
-        const earnedGold = Math.floor(Math.min(offlineRate * 0.5 * elapsedSec, maxOfflineGold) * vipOfflineMult);
+        // Cap: 25% of max online gold; After-Hours Access raises it to 50%
+        const capPct = data.animAfterHoursAccess ? 0.5 : 0.25;
+        const maxOfflineGold = onlineRate * elapsedSec * capPct;
+        // Decay: 50% base; Unlisted Bookings and Discretion Policy each halve it
+        let decayFactor = 0.5;
+        if (data.animUnlistedBookings) decayFactor *= 0.5;
+        if (data.animDiscretionPolicy) decayFactor *= 0.5;
+        // Scaling multipliers stack multiplicatively
+        let scaleMult = data.animVIPPackages ? 1.5 : 1;
+        if (data.animAfterParties)      scaleMult *= 1.5;
+        if (data.animAfterAfterParties) scaleMult *= 1.5;
+        const earnedGold = Math.floor(Math.min(offlineRate * decayFactor * elapsedSec, maxOfflineGold) * scaleMult);
 
         if (earnedGold > 0) {
             data.gems += earnedGold;
             window._offlineGoldEarned = earnedGold;
+        }
+        // Closed-Door Sessions: chance scales with offline gold earned, capped at 35%
+        if (data.animClosedDoorSessions && earnedGold > 0) {
+            const triggerChance = Math.min(0.35, earnedGold / 2000);
+            if (Math.random() < triggerChance) {
+                window._closedDoorSessionActive = true;
+            }
         }
     })();
 
@@ -1244,6 +1356,20 @@
           window._offlineGoldToastTimer = setTimeout(() => { msg.style.display = 'none'; }, 3500);
       }
       window._offlineGoldEarned = 0;
+  }
+  if (window._closedDoorSessionActive) {
+      window._closedDoorSessionActive = false;
+      const overlay = document.getElementById('closed-door-overlay');
+      if (overlay) {
+          overlay.style.display = 'flex';
+          window._closedDoorSessionEnd = Date.now() + 5 * 60 * 1000;
+          setTimeout(() => {
+              overlay.style.display = 'none';
+              window._closedDoorSessionEnd = 0;
+              const timerEl = document.getElementById('closed-door-timer');
+              if (timerEl) timerEl.textContent = '';
+          }, 5 * 60 * 1000);
+      }
   }
 };
     function markTitleSeen() {
@@ -1536,10 +1662,15 @@ function getPassiveGoldPerSec() {
 
 function getOfflineGoldRate() {
     let base = 0;
-    if (data.animPrivateBookings)   base += 2;
-    if (data.animPrivateEvents)     base += 4;
-    if (data.animOfficeParties)     base += 3;
-    if (data.animVIPReservations)   base += 6;
+    if (data.animPrivateBookings)        base += 2;
+    if (data.animPrivateEvents)          base += 4;
+    if (data.animOfficeParties)          base += 3;
+    if (data.animVIPReservations)        base += 6;
+    if (data.animExclusiveRentals)       base += 12;
+    if (data.animNighttimeBookings)      base += 8;
+    if (data.animNightShiftRentals)      base += 10;
+    if (data.animAfterHoursAccess)       base += 8;
+    if (data.animRestrictedAccessEvents) base += 15;
     if (base > 0 && data.kitchenCleanerKitchen) base = Math.ceil(base * 1.5);
     return base;
 }
@@ -1550,9 +1681,18 @@ function startPassiveGoldTick() {
     passiveGoldInterval = setInterval(() => {
         const rate = getPassiveGoldPerSec();
         if (rate > 0 && !titleActive && !endingActive) {
-            data.gems += rate;
+            const closedDoorMult = (window._closedDoorSessionEnd && Date.now() < window._closedDoorSessionEnd) ? 5 : 1;
+            data.gems += rate * closedDoorMult;
             const el = document.getElementById('gem-count');
             if (el) el.innerText = data.gems.toLocaleString();
+            // Update closed-door session timer display
+            if (closedDoorMult > 1) {
+                const timerEl = document.getElementById('closed-door-timer');
+                if (timerEl) {
+                    const secsLeft = Math.ceil((window._closedDoorSessionEnd - Date.now()) / 1000);
+                    timerEl.textContent = secsLeft + 's remaining · 5× gold active';
+                }
+            }
         }
     }, intervalMs);
 }
@@ -1683,8 +1823,20 @@ function buyKitchenUpgrade(type) {
 
 // ─── Animatronic Upgrade System ───────────────────────────────────────────────
 
-const ANIM_COSTS = { animatronics: 500, servos: 750, aiV1: 1000, privateBookings: 800, privateEvents: 1200, officeParties: 1000, vipReservations: 1800, vipPackages: 2500 };
-const ANIM_KEYS  = { animatronics: 'animatronicsUnlocked', servos: 'animatronicsServos', aiV1: 'animatronicsAI', privateBookings: 'animPrivateBookings', privateEvents: 'animPrivateEvents', officeParties: 'animOfficeParties', vipReservations: 'animVIPReservations', vipPackages: 'animVIPPackages' };
+const ANIM_COSTS = {
+    animatronics: 500, servos: 750, aiV1: 1000,
+    privateBookings: 800, privateEvents: 1200, officeParties: 1000, vipReservations: 1800, vipPackages: 2500,
+    exclusiveRentals: 3000, nighttimeBookings: 3500, nightShiftRentals: 4000, afterHoursAccess: 4500,
+    afterParties: 5000, afterAfterParties: 6000, restrictedAccessEvents: 7000, closedDoorSessions: 8000,
+    unlistedBookings: 5500, discretionPolicy: 6500
+};
+const ANIM_KEYS = {
+    animatronics: 'animatronicsUnlocked', servos: 'animatronicsServos', aiV1: 'animatronicsAI',
+    privateBookings: 'animPrivateBookings', privateEvents: 'animPrivateEvents', officeParties: 'animOfficeParties', vipReservations: 'animVIPReservations', vipPackages: 'animVIPPackages',
+    exclusiveRentals: 'animExclusiveRentals', nighttimeBookings: 'animNighttimeBookings', nightShiftRentals: 'animNightShiftRentals', afterHoursAccess: 'animAfterHoursAccess',
+    afterParties: 'animAfterParties', afterAfterParties: 'animAfterAfterParties', restrictedAccessEvents: 'animRestrictedAccessEvents', closedDoorSessions: 'animClosedDoorSessions',
+    unlistedBookings: 'animUnlistedBookings', discretionPolicy: 'animDiscretionPolicy'
+};
 
 const BUFF_DEFS = [
   { id: 'length_speed', name: 'Slipstream',   color: '#ff4500', desc: 'More length = more speed. Each segment beyond 5 cuts tick delay by 1ms (max −40ms).' },
@@ -1767,13 +1919,23 @@ function spawnAiApple() {
 function buyAnimatronicsUpgrade(type) {
     const dataKey = ANIM_KEYS[type];
     if (!dataKey || data[dataKey]) return;
-    if (type === 'servos'          && !data.animatronicsUnlocked)  { alert('Requires Animatronics'); return; }
-    if (type === 'aiV1'            && !data.animatronicsServos)     { alert('Requires Improved Servos'); return; }
-    if (type === 'privateBookings' && !data.animatronicsUnlocked)  { alert('Requires Animatronics'); return; }
-    if (type === 'privateEvents'   && !data.animPrivateBookings)   { alert('Requires Private Bookings'); return; }
-    if (type === 'officeParties'   && !data.animPrivateBookings)   { alert('Requires Private Bookings'); return; }
-    if (type === 'vipReservations' && !data.animPrivateEvents)     { alert('Requires Private Events'); return; }
-    if (type === 'vipPackages'    && !data.animVIPReservations)   { alert('Requires VIP Reservations'); return; }
+    if (type === 'servos'                 && !data.animatronicsUnlocked)       { alert('Requires Animatronics'); return; }
+    if (type === 'aiV1'                   && !data.animatronicsServos)          { alert('Requires Improved Servos'); return; }
+    if (type === 'privateBookings'        && !data.animatronicsUnlocked)       { alert('Requires Animatronics'); return; }
+    if (type === 'privateEvents'          && !data.animPrivateBookings)         { alert('Requires Private Bookings'); return; }
+    if (type === 'officeParties'          && !data.animPrivateBookings)         { alert('Requires Private Bookings'); return; }
+    if (type === 'vipReservations'        && !data.animPrivateEvents)           { alert('Requires Private Events'); return; }
+    if (type === 'vipPackages'            && !data.animVIPReservations)         { alert('Requires VIP Reservations'); return; }
+    if (type === 'exclusiveRentals'       && !data.animVIPPackages)             { alert('Requires VIP Packages'); return; }
+    if (type === 'nighttimeBookings'      && !data.animExclusiveRentals)        { alert('Requires Exclusive Rentals'); return; }
+    if (type === 'nightShiftRentals'      && !data.animNighttimeBookings)       { alert('Requires Nighttime Bookings'); return; }
+    if (type === 'afterHoursAccess'       && !data.animNightShiftRentals)       { alert('Requires Night Shift Rentals'); return; }
+    if (type === 'afterParties'           && !data.animAfterHoursAccess)        { alert('Requires After-Hours Access'); return; }
+    if (type === 'afterAfterParties'      && !data.animAfterParties)            { alert('Requires After Parties'); return; }
+    if (type === 'restrictedAccessEvents' && !data.animAfterAfterParties)       { alert('Requires After After Parties'); return; }
+    if (type === 'closedDoorSessions'     && !data.animRestrictedAccessEvents)  { alert('Requires Restricted Access Events'); return; }
+    if (type === 'unlistedBookings'       && !data.animAfterHoursAccess)        { alert('Requires After-Hours Access'); return; }
+    if (type === 'discretionPolicy'       && !data.animUnlistedBookings)        { alert('Requires Unlisted Bookings'); return; }
     const cost = ANIM_COSTS[type];
     if (data.gems < cost) { alert('Not enough Gold (' + cost + 'G needed)'); return; }
     data.gems -= cost;
