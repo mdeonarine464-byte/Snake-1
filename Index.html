@@ -736,7 +736,7 @@
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Kitchen</span><span id="minimap-kitchen-pct" style="color:var(--gold);">0%</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Animatronics</span><span id="minimap-anim-pct" style="color:var(--gold);">0%</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Arcade</span><span style="color:var(--gold);">0%</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Snakelocks</span><span style="color:var(--gold);">0%</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.82em;"><span>Snakelocks</span><span id="minimap-snakelocks-pct" style="color:var(--gold);">0%</span></div>
             </div>
         </div>
 
@@ -934,7 +934,37 @@
                 <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px; margin-bottom:5px;">Arcade details.</div>
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Snakelocks</button>
-                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px;">Snakelocks details.</div>
+                <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px;">
+                    <div id="neural-lock-status" style="display:none; font-size:0.75em; margin-bottom:6px; text-align:center;"></div>
+                    <button id="snakelocks-btn-behaviorProgramming" class="classic-btn" onclick="buySnakelocksUpgrade('behaviorProgramming')">
+                        <span>
+                            <span style="font-weight:bold;">Behavior Programming</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">All apples move (occasionally toward snake) · All moving apples give 3× gold · Requires AI v1</span>
+                        </span>
+                        <span class="btn-price">1500G</span>
+                    </button>
+                    <button id="snakelocks-btn-aiV2" class="classic-btn" onclick="buySnakelocksUpgrade('aiV2')">
+                        <span>
+                            <span style="font-weight:bold;">Animatronic AI v2</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">2nd target apple spawns · Target apple can dash · All moving apples give 5× gold · Requires Behavior Programming</span>
+                        </span>
+                        <span class="btn-price">3000G</span>
+                    </button>
+                    <button id="snakelocks-btn-appleReplication" class="classic-btn" onclick="buySnakelocksUpgrade('appleReplication')">
+                        <span>
+                            <span style="font-weight:bold;">Apple Replication Tech</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">30% chance for double apple spawns when main apple is eaten · Requires Behavior Programming</span>
+                        </span>
+                        <span class="btn-price">2000G</span>
+                    </button>
+                    <button id="snakelocks-btn-neuralInterface" class="classic-btn" onclick="buySnakelocksUpgrade('neuralInterface')">
+                        <span>
+                            <span style="font-weight:bold;">Neural Interface Testing</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Snake occasionally locks to follow flavor trail · Control returns automatically · Requires AI v2</span>
+                        </span>
+                        <span class="btn-price">4000G</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1208,6 +1238,10 @@
         animClosedDoorSessions: false,
         animUnlistedBookings: false,
         animDiscretionPolicy: false,
+        slocksBehaviorProgramming: false,
+        slocksAIV2: false,
+        slocksAppleReplication: false,
+        slocksNeuralInterface: false,
         selectedBuff: null,
         lastSaveTime: 0
     };
@@ -1443,6 +1477,12 @@
     let aiAppleEaten = false;
     let aiBonusFood1 = null;
     let aiBonusFood2 = null;
+    let aiApple2 = null;
+    let aiApple2Eaten = false;
+    let neuralLockActive = false;
+    let neuralLockUntil = 0;
+    let neuralLockCooldown = 0;
+    let aiAppleDashCooldown = 0;
     let phasePreviewUntil = 0;
     let applesEatenThisRun = 0;
     let shedTailPieces = [];
@@ -1837,6 +1877,19 @@ const ANIM_KEYS = {
     unlistedBookings: 'animUnlistedBookings', discretionPolicy: 'animDiscretionPolicy'
 };
 
+const SNAKELOCKS_COSTS = {
+    behaviorProgramming: 1500,
+    aiV2: 3000,
+    appleReplication: 2000,
+    neuralInterface: 4000
+};
+const SNAKELOCKS_KEYS = {
+    behaviorProgramming: 'slocksBehaviorProgramming',
+    aiV2: 'slocksAIV2',
+    appleReplication: 'slocksAppleReplication',
+    neuralInterface: 'slocksNeuralInterface'
+};
+
 const BUFF_DEFS = [
   { id: 'length_speed', name: 'Slipstream',   color: '#ff4500', desc: 'More length = more speed. Each segment beyond 5 cuts tick delay by 1ms (max −40ms).' },
   { id: 'quick_turn',   name: 'Quick Turn',   color: '#adff2f', desc: 'Double-tap the opposite direction within 200ms to instantly reverse.' },
@@ -1913,6 +1966,147 @@ function spawnAiApple() {
     const excluded = [food, bonusFood, extraFood1, extraFood2, supplierFood, aiBonusFood1, aiBonusFood2].filter(Boolean);
     const spot = pickAppleSpot(excluded);
     if (spot) aiApple = { x: spot.x, y: spot.y };
+}
+
+function spawnAiApple2() {
+    const excluded = [food, bonusFood, extraFood1, extraFood2, supplierFood, aiApple, aiBonusFood1, aiBonusFood2].filter(Boolean);
+    const spot = pickAppleSpot(excluded);
+    if (spot) aiApple2 = { x: spot.x, y: spot.y };
+}
+
+function moveAppleTowardSnake(apple, allOtherApples) {
+    if (!apple || !snake || !snake[0]) return;
+    const head = snake[0];
+    const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+    let d;
+    if (Math.random() < 0.65) {
+        const adx = head.x - apple.x;
+        const ady = head.y - apple.y;
+        if (Math.abs(adx) >= Math.abs(ady)) {
+            d = adx !== 0 ? {x: Math.sign(adx), y: 0} : dirs[Math.floor(Math.random() * 4)];
+        } else {
+            d = ady !== 0 ? {x: 0, y: Math.sign(ady)} : dirs[Math.floor(Math.random() * 4)];
+        }
+    } else {
+        d = dirs[Math.floor(Math.random() * 4)];
+    }
+    const nx = (apple.x + d.x + 20) % 20;
+    const ny = (apple.y + d.y + 20) % 20;
+    const blocked = snake.some(s => s.x === nx && s.y === ny) || allOtherApples.some(a => a && a.x === nx && a.y === ny);
+    if (!blocked) { apple.x = nx; apple.y = ny; }
+}
+
+function moveBehaviorApple(apple, allOtherApples) {
+    if (!apple || !snake || !snake[0]) return;
+    const head = snake[0];
+    const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+    let d;
+    if (Math.random() < 0.3) {
+        const adx = head.x - apple.x;
+        const ady = head.y - apple.y;
+        if (Math.abs(adx) >= Math.abs(ady)) {
+            d = adx !== 0 ? {x: Math.sign(adx), y: 0} : dirs[Math.floor(Math.random() * 4)];
+        } else {
+            d = ady !== 0 ? {x: 0, y: Math.sign(ady)} : dirs[Math.floor(Math.random() * 4)];
+        }
+    } else {
+        d = dirs[Math.floor(Math.random() * 4)];
+    }
+    const nx = (apple.x + d.x + 20) % 20;
+    const ny = (apple.y + d.y + 20) % 20;
+    const blocked = snake.some(s => s.x === nx && s.y === ny) || allOtherApples.some(a => a && a.x === nx && a.y === ny);
+    if (!blocked) { apple.x = nx; apple.y = ny; }
+}
+
+function pickAppleSpotNearSnake(excluded) {
+    if (!snake || !snake[0]) return null;
+    const head = snake[0];
+    const nearby = [];
+    for (let tx = 0; tx < 20; tx++) {
+        for (let ty = 0; ty < 20; ty++) {
+            const dist = Math.abs(tx - head.x) + Math.abs(ty - head.y);
+            if (dist >= 2 && dist <= 5) {
+                const onSnake = snake.some(s => s.x === tx && s.y === ty);
+                const onExcluded = excluded.some(a => a && a.x === tx && a.y === ty);
+                if (!onSnake && !onExcluded) nearby.push({x: tx, y: ty});
+            }
+        }
+    }
+    if (nearby.length === 0) return null;
+    return nearby[Math.floor(Math.random() * nearby.length)];
+}
+
+function getNearestFlavorTarget() {
+    if (!snake || !snake[0]) return null;
+    const head = snake[0];
+    const candidates = flavorTrails.length > 0 ? flavorTrails : (food ? [food] : []);
+    if (candidates.length === 0) return null;
+    return candidates.reduce((best, t) => {
+        const d = Math.abs(t.x - head.x) + Math.abs(t.y - head.y);
+        const bd = best ? Math.abs(best.x - head.x) + Math.abs(best.y - head.y) : Infinity;
+        return d < bd ? t : best;
+    }, null);
+}
+
+function getNeuralLockDirection(target) {
+    if (!snake || !snake[0] || !target) return null;
+    const head = snake[0];
+    const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}]
+        .filter(d => !(d.x === -dx && d.y === -dy));
+    let bestDir = null, bestDist = Infinity;
+    for (const d of dirs) {
+        const nx = (head.x + d.x + 20) % 20;
+        const ny = (head.y + d.y + 20) % 20;
+        const dist = Math.abs(nx - target.x) + Math.abs(ny - target.y);
+        if (dist < bestDist) { bestDist = dist; bestDir = d; }
+    }
+    return bestDir;
+}
+
+function updateSnakelocksUI() {
+    const keys = Object.values(SNAKELOCKS_KEYS);
+    const pct = Math.round(keys.filter(k => data[k]).length / keys.length * 100);
+    const el = document.getElementById('minimap-snakelocks-pct');
+    if (el) el.textContent = pct + '%';
+
+    Object.entries(SNAKELOCKS_COSTS).forEach(([type, cost]) => {
+        const btn = document.getElementById('snakelocks-btn-' + type);
+        if (!btn) return;
+        const owned = data[SNAKELOCKS_KEYS[type]];
+        btn.style.opacity = owned ? '0.6' : '1';
+        btn.style.pointerEvents = owned ? 'none' : '';
+        btn.disabled = !!owned;
+        const priceEl = btn.querySelector('.btn-price');
+        if (priceEl) priceEl.textContent = owned ? 'OWNED' : cost + 'G';
+    });
+
+    const neuralEl = document.getElementById('neural-lock-status');
+    if (neuralEl) {
+        if (data.slocksNeuralInterface) {
+            neuralEl.style.display = 'block';
+            neuralEl.textContent = neuralLockActive ? '⚡ NEURAL LOCK ACTIVE' : 'Neural Interface: Standby';
+            neuralEl.style.color = neuralLockActive ? '#00e5ff' : '#aaa';
+        } else {
+            neuralEl.style.display = 'none';
+        }
+    }
+}
+
+function buySnakelocksUpgrade(type) {
+    const dataKey = SNAKELOCKS_KEYS[type];
+    if (!dataKey || data[dataKey]) return;
+    if (type === 'behaviorProgramming' && !data.animatronicsAI) { alert('Requires Animatronic AI v1'); return; }
+    if (type === 'aiV2'               && !data.slocksBehaviorProgramming) { alert('Requires Behavior Programming'); return; }
+    if (type === 'appleReplication'   && !data.slocksBehaviorProgramming) { alert('Requires Behavior Programming'); return; }
+    if (type === 'neuralInterface'    && !data.slocksAIV2) { alert('Requires Animatronic AI v2'); return; }
+    const cost = SNAKELOCKS_COSTS[type];
+    if (data.gems < cost) { alert('Not enough Gold (' + cost + 'G needed)'); return; }
+    data.gems -= cost;
+    data[dataKey] = true;
+    if (type === 'aiV2' && food) spawnAiApple2();
+    save();
+    updateUI();
+    updateSnakelocksUI();
 }
 
 function buyAnimatronicsUpgrade(type) {
@@ -3801,7 +3995,19 @@ window.addEventListener("keydown", (e) => {
         }
         if (Date.now() < soulAnchorPauseUntil) { setTimeout(gameLoop, 50); return; }
         applyQueuedDirection();
-        
+
+        // Neural Interface Testing: override direction during neural lock
+        if (data.slocksNeuralInterface && neuralLockActive) {
+            if (Date.now() > neuralLockUntil) {
+                neuralLockActive = false;
+                updateSnakelocksUI();
+            } else {
+                const nlTarget = getNearestFlavorTarget();
+                const nlDir = getNeuralLockDirection(nlTarget);
+                if (nlDir) { dx = nlDir.x; dy = nlDir.y; }
+            }
+        }
+
         const head = {x: snake[0].x + dx, y: snake[0].y + dy};
         
         // Wall Logic — always wrap (borderless/infinite mode)
@@ -3840,18 +4046,52 @@ window.addEventListener("keydown", (e) => {
         // Dash: decrement active dash ticks
         if (dashTicks > 0) dashTicks--;
 
-        // Animatronic AI: move the special apple every game tick
+        // Animatronic AI v1: move the special apple every game tick
         if (aiApple && !aiAppleEaten) {
-            const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
-            const d = dirs[Math.floor(Math.random() * 4)];
-            const nx = (aiApple.x + d.x + 20) % 20;
-            const ny = (aiApple.y + d.y + 20) % 20;
-            const allOthers = [food, bonusFood, extraFood1, extraFood2, supplierFood, aiBonusFood1, aiBonusFood2].filter(Boolean);
-            const blocked = snake.some(s => s.x === nx && s.y === ny) || allOthers.some(a => a.x === nx && a.y === ny);
-            if (!blocked) { aiApple.x = nx; aiApple.y = ny; }
+            const allOthers = [food, bonusFood, extraFood1, extraFood2, supplierFood, aiApple2, aiBonusFood1, aiBonusFood2].filter(Boolean);
+            if (data.slocksAIV2) {
+                moveAppleTowardSnake(aiApple, allOthers);
+                if (Date.now() > aiAppleDashCooldown) {
+                    aiAppleDashCooldown = Date.now() + 5000 + Math.random() * 4000;
+                    const dashSpot = pickAppleSpotNearSnake(allOthers);
+                    if (dashSpot) { aiApple.x = dashSpot.x; aiApple.y = dashSpot.y; }
+                }
+            } else {
+                const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
+                const d = dirs[Math.floor(Math.random() * 4)];
+                const nx = (aiApple.x + d.x + 20) % 20;
+                const ny = (aiApple.y + d.y + 20) % 20;
+                const blocked = snake.some(s => s.x === nx && s.y === ny) || allOthers.some(a => a.x === nx && a.y === ny);
+                if (!blocked) { aiApple.x = nx; aiApple.y = ny; }
+            }
         }
 
-        // 🍎 Regular apple movement is disabled
+        // Animatronic AI v2: second target apple moves toward snake
+        if (data.slocksAIV2 && aiApple2 && !aiApple2Eaten) {
+            const allOthers = [food, bonusFood, extraFood1, extraFood2, supplierFood, aiApple, aiBonusFood1, aiBonusFood2].filter(Boolean);
+            moveAppleTowardSnake(aiApple2, allOthers);
+        }
+
+        // Behavior Programming: all regular apples move (occasionally toward snake)
+        if (data.slocksBehaviorProgramming) {
+            const specialApples = [aiApple, aiApple2, aiBonusFood1, aiBonusFood2].filter(Boolean);
+            const regularApples = [food, bonusFood, extraFood1, extraFood2, supplierFood].filter(Boolean);
+            regularApples.forEach(apple => {
+                const others = [...regularApples.filter(a => a !== apple), ...specialApples];
+                moveBehaviorApple(apple, others);
+            });
+        }
+
+        // Neural Interface Testing: randomly trigger neural lock
+        if (data.slocksNeuralInterface && !neuralLockActive && Date.now() > neuralLockCooldown) {
+            const triggerChance = flavorTrails.length > 0 ? 0.006 : 0.002;
+            if (Math.random() < triggerChance) {
+                neuralLockActive = true;
+                neuralLockUntil = Date.now() + 1500 + Math.random() * 1500;
+                neuralLockCooldown = Date.now() + 12000;
+                updateSnakelocksUI();
+            }
+        }
 
         const ateMainApple    = head.x === food.x && head.y === food.y;
         const ateBonusApple   = bonusFood    && head.x === bonusFood.x    && head.y === bonusFood.y;
@@ -3859,6 +4099,7 @@ window.addEventListener("keydown", (e) => {
         const ateExtraApple2  = extraFood2   && head.x === extraFood2.x   && head.y === extraFood2.y;
         const ateSupplierApple = supplierFood && head.x === supplierFood.x && head.y === supplierFood.y;
         const ateAiApple      = aiApple && !aiAppleEaten && head.x === aiApple.x && head.y === aiApple.y;
+        const ateAiApple2     = aiApple2 && !aiApple2Eaten && head.x === aiApple2.x && head.y === aiApple2.y;
         const ateAiBonus1     = aiBonusFood1 && head.x === aiBonusFood1.x && head.y === aiBonusFood1.y;
         const ateAiBonus2     = aiBonusFood2 && head.x === aiBonusFood2.x && head.y === aiBonusFood2.y;
 
@@ -3866,15 +4107,16 @@ window.addEventListener("keydown", (e) => {
             growCount += soulHusk.restoreLength;
             soulHusk = null;
         }
-        if (ateMainApple || ateBonusApple || ateExtraApple1 || ateExtraApple2 || ateSupplierApple || ateAiApple || ateAiBonus1 || ateAiBonus2) {
+        if (ateMainApple || ateBonusApple || ateExtraApple1 || ateExtraApple2 || ateSupplierApple || ateAiApple || ateAiApple2 || ateAiBonus1 || ateAiBonus2) {
             // ✅ Clear death lore on first apple
   const box = document.getElementById("save-code-box");
   if (box && box.value && data.diedLastRun === false) {
     box.value = "... The memory fades...";
     setTimeout(() => box.value = "", 1200);
   }
-            const eatenApple = ateMainApple ? food : ateBonusApple ? bonusFood : ateExtraApple1 ? extraFood1 : ateExtraApple2 ? extraFood2 : ateSupplierApple ? supplierFood : ateAiApple ? aiApple : ateAiBonus1 ? aiBonusFood1 : aiBonusFood2;
-            const rewardMult = ateAiApple ? 3 : 1;
+            const eatenApple = ateMainApple ? food : ateBonusApple ? bonusFood : ateExtraApple1 ? extraFood1 : ateExtraApple2 ? extraFood2 : ateSupplierApple ? supplierFood : ateAiApple ? aiApple : ateAiApple2 ? aiApple2 : ateAiBonus1 ? aiBonusFood1 : aiBonusFood2;
+            const isElevatedReward = ateAiApple || ateAiApple2 || data.slocksBehaviorProgramming;
+            const rewardMult = isElevatedReward ? (data.slocksAIV2 ? 5 : 3) : 1;
             applyAppleRewards(rewardMult, true, eatenApple);
 
             if (ateAiApple) {
@@ -3885,6 +4127,9 @@ window.addEventListener("keydown", (e) => {
                 if (b1) { aiBonusFood1 = { x: b1.x, y: b1.y, spawnTime: getFreshSpawnTime() }; excl.push(aiBonusFood1); }
                 const b2 = pickAppleSpot(excl);
                 if (b2) aiBonusFood2 = { x: b2.x, y: b2.y, spawnTime: getFreshSpawnTime() };
+            }
+            if (ateAiApple2) {
+                aiApple2Eaten = true;
             }
             if (ateAiBonus1) { const s = pickAppleSpot([food,bonusFood,extraFood1,extraFood2,supplierFood,aiApple,aiBonusFood2].filter(Boolean)); aiBonusFood1 = s ? {x:s.x,y:s.y,spawnTime:getFreshSpawnTime()} : null; }
             if (ateAiBonus2) { const s = pickAppleSpot([food,bonusFood,extraFood1,extraFood2,supplierFood,aiApple,aiBonusFood1].filter(Boolean)); aiBonusFood2 = s ? {x:s.x,y:s.y,spawnTime:getFreshSpawnTime()} : null; }
@@ -3900,7 +4145,12 @@ window.addEventListener("keydown", (e) => {
             }
 
             if (data.exp >= data.nxt) { data.lvl++; data.sp++; data.xpM += 0.2; data.exp = 0; data.nxt *= 1.10; }
-            if (ateMainApple)   respawnMainApple();
+            if (ateMainApple) {
+                respawnMainApple();
+                if (data.slocksAppleReplication && !bonusFood && Math.random() < 0.3) {
+                    respawnBonusApple();
+                }
+            }
             if (ateBonusApple)  respawnBonusApple();
             if (ateExtraApple1) spawnExtraApple(1);
             if (ateExtraApple2) spawnExtraApple(2);
@@ -3977,6 +4227,26 @@ window.addEventListener("keydown", (e) => {
             ctx.lineWidth = 2;
             ctx.strokeRect(aiApple.x * grid + 2, aiApple.y * grid + 2, grid - 4, grid - 4);
         }
+        // AI v2: second target apple — electric cyan with fast pulse
+        if (data.slocksAIV2 && aiApple2 && !aiApple2Eaten) {
+            const pulse2 = Math.floor(Date.now() / 100) % 2 === 0;
+            ctx.fillStyle = '#00e5ff';
+            if (data.neonEnabled) { ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 16; }
+            ctx.fillRect(aiApple2.x * grid + 2, aiApple2.y * grid + 2, grid - 4, grid - 4);
+            ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+            ctx.strokeStyle = pulse2 ? '#ffffff' : '#44ffee';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(aiApple2.x * grid + 2, aiApple2.y * grid + 2, grid - 4, grid - 4);
+        }
+        // Behavior Programming: pulsing orange border on all regular moving apples
+        if (data.slocksBehaviorProgramming) {
+            const bpPulse = Math.floor(Date.now() / 220) % 2 === 0;
+            ctx.strokeStyle = bpPulse ? 'rgba(255,160,30,0.85)' : 'rgba(255,210,60,0.45)';
+            ctx.lineWidth = 1.5;
+            [food, bonusFood, extraFood1, extraFood2, supplierFood].filter(Boolean).forEach(apple => {
+                ctx.strokeRect(apple.x * grid + 1, apple.y * grid + 1, grid - 2, grid - 2);
+            });
+        }
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
         if (soulHusk && soulHusk.segments) {
@@ -4028,7 +4298,18 @@ window.addEventListener("keydown", (e) => {
             }
             ctx.globalAlpha = 1;
         });
-        
+
+        // Neural Interface Testing: cyan overlay and label during lock
+        if (data.slocksNeuralInterface && neuralLockActive) {
+            ctx.fillStyle = 'rgba(0, 229, 255, 0.10)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = '#00e5ff';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚡ NEURAL LOCK', canvas.width / 2, canvas.height / 2 + 4);
+            ctx.textAlign = 'left';
+        }
+
         setTimeout(gameLoop, getLoopDelay());
     }
 
@@ -4159,8 +4440,11 @@ if (data.diedLastRun) {
     generateFood();
     // Animatronic AI: spawn once-per-run moving target
     aiApple = null; aiAppleEaten = false; aiBonusFood1 = null; aiBonusFood2 = null;
-    dashTicks = 0; dashCooldownEnd = 0;
+    aiApple2 = null; aiApple2Eaten = false;
+    neuralLockActive = false; neuralLockUntil = 0; neuralLockCooldown = 0;
+    dashTicks = 0; dashCooldownEnd = 0; aiAppleDashCooldown = 0;
     if (data.animatronicsAI && food) spawnAiApple();
+    if (data.slocksAIV2 && food) spawnAiApple2();
 }
 
     // Cookie Clicker style encoding (Base64)
@@ -4185,7 +4469,7 @@ function importSave() {
     }
 }
 
-    init(); updateUI(); updateKitchenUI(); updateAnimatronicsUI(); applyLanguage(); gameLoop(); startPassiveGoldTick(); buildVIPBuffSelector();
+    init(); updateUI(); updateKitchenUI(); updateAnimatronicsUI(); updateSnakelocksUI(); applyLanguage(); gameLoop(); startPassiveGoldTick(); buildVIPBuffSelector();
 // Fullscreen on canvas click
 (function() {
     const gameCanvas = document.getElementById('game');
