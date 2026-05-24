@@ -316,6 +316,82 @@
     box-shadow: none !important;
 }
 
+/* ============================================================
+   RETRO 80s CRT SCREEN FILTER
+   ============================================================ */
+
+@keyframes crt-flicker {
+    0%, 100% { opacity: 1; }
+    42.9%    { opacity: 1; }
+    43%      { opacity: 0.91; }
+    43.7%    { opacity: 1; }
+    78.9%    { opacity: 1; }
+    79%      { opacity: 0.97; }
+    79.5%    { opacity: 1; }
+}
+
+@keyframes crt-scanline-drift {
+    from { background-position: 0 0; }
+    to   { background-position: 0 4px; }
+}
+
+/* Scrolling scanlines */
+body.retro-crt::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent       0px,
+        transparent       3px,
+        rgba(0, 0, 0, 0.28) 3px,
+        rgba(0, 0, 0, 0.28) 4px
+    );
+    background-size: 100% 4px;
+    animation: crt-scanline-drift 0.15s steps(1) infinite;
+}
+
+/* Curved-screen vignette + convex glass glare */
+body.retro-crt::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    background:
+        /* convex glass reflection — top-centre highlight */
+        radial-gradient(ellipse 55% 28% at 50% 2%,
+            rgba(200, 255, 215, 0.08) 0%,
+            transparent 58%),
+        /* edge darkening — simulates curved-outward screen depth */
+        radial-gradient(ellipse 115% 105% at 50% 50%,
+            transparent 38%,
+            rgba(0, 0, 0, 0.97) 100%);
+    border-radius: 5% / 4%;
+    box-shadow: inset 0 0 90px rgba(0, 0, 0, 0.35);
+}
+
+/* Phosphor tint, contrast boost, and subtle screen flicker */
+body.retro-crt {
+    filter: contrast(1.1) brightness(0.88) saturate(1.18);
+    animation: crt-flicker 11s infinite;
+}
+
+/* CRT bezel + curved screen on the game container */
+body.retro-crt #game-layout {
+    border-radius: 22px;
+    transform: perspective(1800px) scale(1.012);
+    outline: 3px solid #1d1d1d;
+    outline-offset: 5px;
+    box-shadow:
+        0 0 0 10px #111,
+        0 0 0 14px #0a0a0a,
+        0 0 55px rgba(0, 220, 110, 0.1),
+        inset 0 0 35px rgba(0, 0, 0, 0.3);
+}
+
 .credits-scroll {
     height: 150px;
     overflow: hidden;
@@ -573,6 +649,10 @@
         <div class="option-row">
             <span class="option-label">Neon Effects</span>
             <button class="switch-btn" id="neon-toggle-btn" onclick="toggleNeonEnabled()"></button>
+        </div>
+        <div class="option-row">
+            <span class="option-label">Retro CRT</span>
+            <button class="switch-btn" id="retro-crt-btn" onclick="toggleRetroCRT()" title="Old-school curved CRT monitor look"></button>
         </div>
         <div class="option-row">
             <span class="option-label">Language</span>
@@ -1196,7 +1276,7 @@
         dualPhase: false, phaseGreed: false, phaseExpertise: false, phasePremonition: false, phaseCharge: false, temporalPhaseSlow: false, immortalPhase: false,
         soulInsurance: false, fracturedSoul: false, quickTurn: false,
         endingHellUnlocked: false, endingAverageUnlocked: false,
-        musicEnabled: true, neonEnabled: true, bgColor: '#080808',
+        musicEnabled: true, neonEnabled: true, retro80sEnabled: false, bgColor: '#080808',
         controlPreset: 'arrows',
         customControls: { left: 'j', up: 'i', right: 'l', down: 'k' },
         phaseKey: 'space',
@@ -1365,6 +1445,7 @@
         return presets[data.controlPreset] || presets.arrows;
     }
     applyNeonPreference();
+    applyRetroCRTPreference();
     applyGameBackground();
 
     function save() { data.lastSaveTime = Date.now(); localStorage.setItem('Snake_2026_SoulReveal', JSON.stringify(data)); }
@@ -2955,6 +3036,11 @@ function updateOptionButtons() {
         neonBtn.textContent = data.neonEnabled ? 'ON' : 'OFF';
         neonBtn.classList.toggle('active', data.neonEnabled);
     }
+    const retroBtn = document.getElementById('retro-crt-btn');
+    if (retroBtn) {
+        retroBtn.textContent = data.retro80sEnabled ? 'ON' : 'OFF';
+        retroBtn.classList.toggle('active', !!data.retro80sEnabled);
+    }
     const customRow = document.getElementById('custom-control-row');
     if (customRow) customRow.style.opacity = data.controlPreset === 'custom' ? '1' : '0.55';
     const growthTailBtn = document.getElementById('growth-tail-btn');
@@ -3212,6 +3298,17 @@ function toggleMusicEnabled() {
 function toggleNeonEnabled() {
     data.neonEnabled = !data.neonEnabled;
     applyNeonPreference();
+    save();
+    updateOptionButtons();
+}
+
+function applyRetroCRTPreference() {
+    document.body.classList.toggle('retro-crt', !!data.retro80sEnabled);
+}
+
+function toggleRetroCRT() {
+    data.retro80sEnabled = !data.retro80sEnabled;
+    applyRetroCRTPreference();
     save();
     updateOptionButtons();
 }
