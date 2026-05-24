@@ -2002,6 +2002,7 @@ function moveBehaviorApple(apple, allOtherApples) {
     const dirs = [{x:1,y:0},{x:-1,y:0},{x:0,y:1},{x:0,y:-1}];
     let d;
     if (Math.random() < 0.3) {
+        apple.seeking = true;
         const adx = head.x - apple.x;
         const ady = head.y - apple.y;
         if (Math.abs(adx) >= Math.abs(ady)) {
@@ -2010,6 +2011,7 @@ function moveBehaviorApple(apple, allOtherApples) {
             d = ady !== 0 ? {x: 0, y: Math.sign(ady)} : dirs[Math.floor(Math.random() * 4)];
         }
     } else {
+        apple.seeking = false;
         d = dirs[Math.floor(Math.random() * 4)];
     }
     const nx = (apple.x + d.x + 20) % 20;
@@ -4235,6 +4237,19 @@ window.addEventListener("keydown", (e) => {
             ctx.strokeStyle = pulse2 ? '#ffffff' : '#ffaa44';
             ctx.lineWidth = 2;
             ctx.strokeRect(aiApple2.x * grid + 2, aiApple2.y * grid + 2, grid - 4, grid - 4);
+        }
+        // Behavior Programming: golden neon hue only on apples currently seeking the snake head
+        if (data.slocksBehaviorProgramming) {
+            const seekPulse = Math.floor(Date.now() / 150) % 2 === 0;
+            [food, bonusFood, extraFood1, extraFood2, supplierFood].filter(a => a && a.seeking).forEach(apple => {
+                ctx.fillStyle = seekPulse ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255, 180, 0, 0.25)';
+                if (data.neonEnabled) { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 14; }
+                ctx.fillRect(apple.x * grid + 2, apple.y * grid + 2, grid - 4, grid - 4);
+                ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+                ctx.strokeStyle = seekPulse ? '#ffffff' : '#ffd700';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(apple.x * grid + 2, apple.y * grid + 2, grid - 4, grid - 4);
+            });
         }
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
