@@ -445,6 +445,70 @@
     width: 100% !important;
     height: 100% !important;
 }
+
+/* ===== CRT RETRO 80s FILTER ===== */
+#crt-scanlines {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    border-radius: 6px;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(0, 12, 0, 0.18) 0px,
+        rgba(0, 12, 0, 0.18) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+}
+#crt-vignette {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 51;
+    border-radius: 6px;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 42%,
+        rgba(0, 0, 0, 0.32) 78%,
+        rgba(0, 0, 0, 0.72) 100%
+    );
+}
+.retro-crt-active #crt-scanlines,
+.retro-crt-active #crt-vignette { display: block; }
+@keyframes crt-flicker {
+    0%   { opacity: 1; }
+    91%  { opacity: 1; }
+    92%  { opacity: 0.94; }
+    93%  { opacity: 1; }
+    97%  { opacity: 1; }
+    98%  { opacity: 0.96; }
+    100% { opacity: 1; }
+}
+.retro-crt-active #game {
+    filter: sepia(1) hue-rotate(62deg) saturate(4) brightness(0.84) contrast(1.12);
+    transform: scale(1.045);
+    animation: crt-flicker 7s infinite;
+}
+.retro-crt-active #game-container {
+    border-radius: 26px !important;
+    border-color: #0d0d0d !important;
+    overflow: hidden;
+    box-shadow:
+        0 0 0 5px #191919,
+        0 0 0 9px #111,
+        0 0 36px rgba(0, 230, 60, 0.28),
+        0 0 72px rgba(0, 170, 40, 0.11);
+}
+#game-container:fullscreen.retro-crt-active canvas#game,
+#game-container:-webkit-full-screen.retro-crt-active canvas#game,
+#game-container:-moz-full-screen.retro-crt-active canvas#game {
+    transform: scale(1.045) !important;
+    filter: sepia(1) hue-rotate(62deg) saturate(4) brightness(0.84) contrast(1.12) !important;
+    animation: crt-flicker 7s infinite !important;
+}
     </style>
 </head>
 <body onmousemove="checkPause(event)">
@@ -575,6 +639,10 @@
             <button class="switch-btn" id="neon-toggle-btn" onclick="toggleNeonEnabled()"></button>
         </div>
         <div class="option-row">
+            <span class="option-label">Retro CRT Filter</span>
+            <button class="switch-btn" id="retro-toggle-btn" onclick="toggleRetroFilter()" title="Phosphor green screen with scanlines and CRT curvature"></button>
+        </div>
+        <div class="option-row">
             <span class="option-label">Language</span>
             <select id="language-select" class="switch-btn" onchange="setLanguage(this.value)">
                 <option value="en">English</option>
@@ -693,6 +761,8 @@
         <div id="closed-door-timer" style="color:#666; font-size:0.78em; margin-top:10px; letter-spacing:0.06em;"></div>
     </div>
     <canvas id="game" width="400" height="400" title="Click to toggle fullscreen" style="cursor:pointer;"></canvas>
+    <div id="crt-scanlines"></div>
+    <div id="crt-vignette"></div>
     
     <!-- New Save Code Section -->
     <div id="save-code-panel" style="margin-top:15px; background:#151515; padding:10px; border-radius:8px; border:1px solid #333;">
@@ -1196,7 +1266,7 @@
         dualPhase: false, phaseGreed: false, phaseExpertise: false, phasePremonition: false, phaseCharge: false, temporalPhaseSlow: false, immortalPhase: false,
         soulInsurance: false, fracturedSoul: false, quickTurn: false,
         endingHellUnlocked: false, endingAverageUnlocked: false,
-        musicEnabled: true, neonEnabled: true, bgColor: '#080808',
+        musicEnabled: true, neonEnabled: true, retroFilter: false, bgColor: '#080808',
         controlPreset: 'arrows',
         customControls: { left: 'j', up: 'i', right: 'l', down: 'k' },
         phaseKey: 'space',
@@ -1365,6 +1435,7 @@
         return presets[data.controlPreset] || presets.arrows;
     }
     applyNeonPreference();
+    applyRetroFilter();
     applyGameBackground();
 
     function save() { data.lastSaveTime = Date.now(); localStorage.setItem('Snake_2026_SoulReveal', JSON.stringify(data)); }
@@ -2940,6 +3011,17 @@ function applyNeonPreference() {
     document.body.classList.toggle('neon-off', !data.neonEnabled);
 }
 
+function applyRetroFilter() {
+    document.body.classList.toggle('retro-crt-active', !!data.retroFilter);
+}
+
+function toggleRetroFilter() {
+    data.retroFilter = !data.retroFilter;
+    applyRetroFilter();
+    save();
+    updateOptionButtons();
+}
+
 function updateOptionButtons() {
     ['arrows', 'wasd', 'uhjk', 'custom'].forEach(preset => {
         const el = document.getElementById(`control-${preset}`);
@@ -2954,6 +3036,11 @@ function updateOptionButtons() {
     if (neonBtn) {
         neonBtn.textContent = data.neonEnabled ? 'ON' : 'OFF';
         neonBtn.classList.toggle('active', data.neonEnabled);
+    }
+    const retroBtn = document.getElementById('retro-toggle-btn');
+    if (retroBtn) {
+        retroBtn.textContent = data.retroFilter ? 'ON' : 'OFF';
+        retroBtn.classList.toggle('active', !!data.retroFilter);
     }
     const customRow = document.getElementById('custom-control-row');
     if (customRow) customRow.style.opacity = data.controlPreset === 'custom' ? '1' : '0.55';
