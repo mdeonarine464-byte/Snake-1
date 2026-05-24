@@ -4082,16 +4082,6 @@ window.addEventListener("keydown", (e) => {
             });
         }
 
-        // Neural Interface Testing: randomly trigger neural lock
-        if (data.slocksNeuralInterface && !neuralLockActive && Date.now() > neuralLockCooldown) {
-            const triggerChance = flavorTrails.length > 0 ? 0.006 : 0.002;
-            if (Math.random() < triggerChance) {
-                neuralLockActive = true;
-                neuralLockUntil = Date.now() + 1500 + Math.random() * 1500;
-                neuralLockCooldown = Date.now() + 12000;
-                updateSnakelocksUI();
-            }
-        }
 
         const ateMainApple    = head.x === food.x && head.y === food.y;
         const ateBonusApple   = bonusFood    && head.x === bonusFood.x    && head.y === bonusFood.y;
@@ -4118,6 +4108,14 @@ window.addEventListener("keydown", (e) => {
             const isElevatedReward = ateAiApple || ateAiApple2 || data.slocksBehaviorProgramming;
             const rewardMult = isElevatedReward ? (data.slocksAIV2 ? 5 : 3) : 1;
             applyAppleRewards(rewardMult, true, eatenApple);
+
+            // Neural Interface Testing: lock triggers on apple eat (if off cooldown)
+            if (data.slocksNeuralInterface && !neuralLockActive && Date.now() > neuralLockCooldown) {
+                neuralLockActive = true;
+                neuralLockUntil = Date.now() + 1500 + Math.random() * 1500;
+                neuralLockCooldown = Date.now() + 8000;
+                updateSnakelocksUI();
+            }
 
             if (ateAiApple) {
                 aiAppleEaten = true;
@@ -4212,7 +4210,7 @@ window.addEventListener("keydown", (e) => {
         drawApple(food, 0);
         drawApple(bonusFood, 1);
         drawApple(extraFood1, 0);
-        drawApple(extraFood2, 1);
+        drawApple(extraFood2, 0);
         drawApple(supplierFood, 0);
         drawApple(aiBonusFood1, 0);
         drawApple(aiBonusFood2, 1);
@@ -4227,25 +4225,16 @@ window.addEventListener("keydown", (e) => {
             ctx.lineWidth = 2;
             ctx.strokeRect(aiApple.x * grid + 2, aiApple.y * grid + 2, grid - 4, grid - 4);
         }
-        // AI v2: second target apple — electric cyan with fast pulse
+        // AI v2: second target apple — same visual as first target apple
         if (data.slocksAIV2 && aiApple2 && !aiApple2Eaten) {
-            const pulse2 = Math.floor(Date.now() / 100) % 2 === 0;
-            ctx.fillStyle = '#00e5ff';
-            if (data.neonEnabled) { ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 16; }
+            const pulse2 = Math.floor(Date.now() / 150) % 2 === 0;
+            ctx.fillStyle = '#ff6200';
+            if (data.neonEnabled) { ctx.shadowColor = '#ff6200'; ctx.shadowBlur = 14; }
             ctx.fillRect(aiApple2.x * grid + 2, aiApple2.y * grid + 2, grid - 4, grid - 4);
             ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
-            ctx.strokeStyle = pulse2 ? '#ffffff' : '#44ffee';
+            ctx.strokeStyle = pulse2 ? '#ffffff' : '#ffaa44';
             ctx.lineWidth = 2;
             ctx.strokeRect(aiApple2.x * grid + 2, aiApple2.y * grid + 2, grid - 4, grid - 4);
-        }
-        // Behavior Programming: pulsing orange border on all regular moving apples
-        if (data.slocksBehaviorProgramming) {
-            const bpPulse = Math.floor(Date.now() / 220) % 2 === 0;
-            ctx.strokeStyle = bpPulse ? 'rgba(255,160,30,0.85)' : 'rgba(255,210,60,0.45)';
-            ctx.lineWidth = 1.5;
-            [food, bonusFood, extraFood1, extraFood2, supplierFood].filter(Boolean).forEach(apple => {
-                ctx.strokeRect(apple.x * grid + 1, apple.y * grid + 1, grid - 2, grid - 2);
-            });
         }
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
