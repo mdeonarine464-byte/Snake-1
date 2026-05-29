@@ -935,6 +935,7 @@
 
                 <button class="accordion" style="font-size:0.85em; border-left:3px solid #555; border-radius:6px 6px 0 0;">Snakelocks</button>
                 <div class="panel-content" style="padding:6px 10px; border-left:3px solid #333; border-radius:0 0 6px 6px;">
+                    <div id="snakelocks-lore-tier" style="display:none; font-size:0.72em; color:#b06aff; text-align:center; margin-bottom:6px; letter-spacing:0.06em; text-shadow:0 0 8px rgba(176,106,255,0.7);">✦ CUTSCENE LORE TIER UNLOCKED ✦</div>
                     <div id="neural-lock-status" style="display:none; font-size:0.75em; margin-bottom:6px; text-align:center;"></div>
                     <button id="snakelocks-btn-behaviorProgramming" class="classic-btn" onclick="buySnakelocksUpgrade('behaviorProgramming')">
                         <span>
@@ -964,6 +965,14 @@
                         </span>
                         <span class="btn-price">4000G</span>
                     </button>
+                    <button id="snakelocks-btn-hydraulicLock" class="classic-btn" onclick="buySnakelocksUpgrade('hydraulicLock')">
+                        <span>
+                            <span style="font-weight:bold;">Hydraulic Lock System</span><br>
+                            <span style="font-size:0.8em; color:#aaa;">Always locks turning to follow fresh ingredients trail · Returns control when trail clears · +30 passive gold/sec · Requires Neural Interface</span>
+                        </span>
+                        <span class="btn-price">6000G</span>
+                    </button>
+                    <div id="hydraulic-lock-status" style="display:none; font-size:0.75em; color:#ffe566; text-align:center; margin:-4px 0 6px;"></div>
                 </div>
             </div>
         </div>
@@ -1695,6 +1704,7 @@ function getPassiveGoldPerSec() {
     if (data.animPrivateEvents)     base += 4;
     if (data.animOfficeParties)     base += 3;
     if (data.animVIPReservations)   base += 6;
+    if (data.slocksHydraulicLock)   base += 30;
     if (base > 0 && data.kitchenCleanerKitchen) base = Math.ceil(base * 1.5);
     return base;
 }
@@ -1881,13 +1891,15 @@ const SNAKELOCKS_COSTS = {
     behaviorProgramming: 1500,
     aiV2: 3000,
     appleReplication: 2000,
-    neuralInterface: 4000
+    neuralInterface: 4000,
+    hydraulicLock: 6000
 };
 const SNAKELOCKS_KEYS = {
     behaviorProgramming: 'slocksBehaviorProgramming',
     aiV2: 'slocksAIV2',
     appleReplication: 'slocksAppleReplication',
-    neuralInterface: 'slocksNeuralInterface'
+    neuralInterface: 'slocksNeuralInterface',
+    hydraulicLock: 'slocksHydraulicLock'
 };
 
 const BUFF_DEFS = [
@@ -2092,6 +2104,21 @@ function updateSnakelocksUI() {
             neuralEl.style.display = 'none';
         }
     }
+
+    const loreEl = document.getElementById('snakelocks-lore-tier');
+    if (loreEl) loreEl.style.display = data.cutsceneLoreTierUnlocked ? 'block' : 'none';
+
+    const hlStatusEl = document.getElementById('hydraulic-lock-status');
+    if (hlStatusEl) {
+        if (data.slocksHydraulicLock) {
+            hlStatusEl.style.display = 'block';
+            const trailActive = flavorTrails.length > 0;
+            hlStatusEl.textContent = trailActive ? '⚙ HYDRAULIC LOCK — TRACKING TRAIL' : 'Hydraulic Lock: Idle (+30G/sec)';
+            hlStatusEl.style.color = trailActive ? '#ffe566' : '#888';
+        } else {
+            hlStatusEl.style.display = 'none';
+        }
+    }
 }
 
 function buySnakelocksUpgrade(type) {
@@ -2101,11 +2128,17 @@ function buySnakelocksUpgrade(type) {
     if (type === 'aiV2'               && !data.slocksBehaviorProgramming) { alert('Requires Behavior Programming'); return; }
     if (type === 'appleReplication'   && !data.slocksBehaviorProgramming) { alert('Requires Behavior Programming'); return; }
     if (type === 'neuralInterface'    && !data.slocksAIV2) { alert('Requires Animatronic AI v2'); return; }
+    if (type === 'hydraulicLock'      && !data.slocksNeuralInterface) { alert('Requires Neural Interface Testing'); return; }
     const cost = SNAKELOCKS_COSTS[type];
     if (data.gems < cost) { alert('Not enough Gold (' + cost + 'G needed)'); return; }
     data.gems -= cost;
     data[dataKey] = true;
     if (type === 'aiV2' && food) spawnAiApple2();
+    if (type === 'hydraulicLock') startPassiveGoldTick();
+    // Unlock Cutscene lore tier on first Snakelocks purchase (no gameplay effect yet)
+    if (!data.cutsceneLoreTierUnlocked) {
+        data.cutsceneLoreTierUnlocked = true;
+    }
     save();
     updateUI();
     updateSnakelocksUI();
@@ -3998,6 +4031,13 @@ window.addEventListener("keydown", (e) => {
         if (Date.now() < soulAnchorPauseUntil) { setTimeout(gameLoop, 50); return; }
         applyQueuedDirection();
 
+        // Hydraulic Lock System: always steer toward flavor trail when one exists
+        if (data.slocksHydraulicLock && flavorTrails.length > 0) {
+            const hlTarget = getNearestFlavorTarget();
+            const hlDir = getNeuralLockDirection(hlTarget);
+            if (hlDir) { dx = hlDir.x; dy = hlDir.y; }
+        }
+
         // Neural Interface Testing: override direction during neural lock (ends when trail is fully eaten)
         if (data.slocksNeuralInterface && neuralLockActive) {
             if (flavorTrails.length === 0) {
@@ -4299,6 +4339,17 @@ window.addEventListener("keydown", (e) => {
             }
             ctx.globalAlpha = 1;
         });
+
+        // Hydraulic Lock System: amber overlay when tracking trail
+        if (data.slocksHydraulicLock && flavorTrails.length > 0) {
+            ctx.fillStyle = 'rgba(255, 229, 102, 0.07)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = 'bold 11px monospace';
+            ctx.fillStyle = '#ffe566';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚙ HYDRAULIC LOCK', canvas.width / 2, canvas.height / 2 + 4);
+            ctx.textAlign = 'left';
+        }
 
         // Neural Interface Testing: cyan overlay and label during lock
         if (data.slocksNeuralInterface && neuralLockActive) {
